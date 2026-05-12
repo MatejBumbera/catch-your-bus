@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Catch-your-bus", "Catch-your-bus\Catch-your-bus.csproj", "{346F6A18-E713-4CDF-BF02-80A7D9A4B426}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAL", "DAL\DAL.csproj", "{F77D17BB-CA13-42BE-8597-B3DBB5783F8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{346F6A18-E713-4CDF-BF02-80A7D9A4B426}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{346F6A18-E713-4CDF-BF02-80A7D9A4B426}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{346F6A18-E713-4CDF-BF02-80A7D9A4B426}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F77D17BB-CA13-42BE-8597-B3DBB5783F8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F77D17BB-CA13-42BE-8597-B3DBB5783F8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F77D17BB-CA13-42BE-8597-B3DBB5783F8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F77D17BB-CA13-42BE-8597-B3DBB5783F8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
