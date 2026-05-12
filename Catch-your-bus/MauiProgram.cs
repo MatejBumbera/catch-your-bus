@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using DAL;
+using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace Catch_your_bus;
 
@@ -14,6 +16,11 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
+        
+        var dbPath = Path.Combine(FileSystem.AppDataDirectory, "catchyourbus.db3");
+
+        builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlite($"Data Source={dbPath}"));
 
 #if DEBUG
         builder.Logging.AddDebug();
