@@ -11,7 +11,10 @@ public enum VehicleType
 {
     Bus,
     Tram,
-    Subway
+    Subway,
+    Rail,
+    Ferry,
+    Other
 }
 
 /// <summary>
@@ -25,7 +28,7 @@ public class RouteSegment
     /// Human-readable instruction for this segment (e.g. "Walk to Česká").
     /// </summary>
     public string Instruction { get; set; } = string.Empty;
-    
+
     public TimeSpan Duration { get; set; }
     
     public double DistanceMeters { get; set; }
@@ -55,4 +58,16 @@ public class RouteSegment
     /// Null if <see cref="Mode"/> is not <see cref="TravelMode.Transit"/>.
     /// </summary>
     public int? NumberOfStops { get; set; }
+
+    /// <summary>
+    /// Scheduled departure time.
+    /// Null if <see cref="Mode"/> is not <see cref="TravelMode.Transit"/>.
+    /// </summary>
+    public DateTimeOffset? DepartureTime { get; set; }
+
+    /// <summary>
+    /// Scheduled arrival time.
+    /// Null if <see cref="Mode"/> is not <see cref="TravelMode.Transit"/>.
+    /// </summary>
+    public DateTimeOffset? ArrivalTime { get; set; }
 }

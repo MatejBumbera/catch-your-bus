@@ -1,4 +1,5 @@
-﻿using DAL;
+﻿using Catch_your_bus.Models.Services;
+using DAL;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +22,8 @@ public static class MauiProgram
 
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite($"Data Source={dbPath}"));
+        
+        builder.Services.AddHttpClient<IGoogleRoutesService, GoogleRoutesService>(client => new GoogleRoutesService(client, Config.GoogleRoutesApiKey));
 
 #if DEBUG
         builder.Logging.AddDebug();
