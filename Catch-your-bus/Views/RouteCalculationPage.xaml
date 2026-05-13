@@ -172,6 +172,10 @@
                 <VerticalStackLayout IsVisible="{Binding IsFastestTab}" Spacing="16">
 
                     <Border Style="{StaticResource CardBorder}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ViewRouteDetailsCommand}" CommandParameter="{Binding CurrentBundle.Winner}" />
+                        </Border.GestureRecognizers>
+                        
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                 <GradientStop Color="#6C63FF" Offset="0.0" />
@@ -179,84 +183,36 @@
                             </LinearGradientBrush>
                         </Border.Background>
 
-                        <VerticalStackLayout Spacing="8">
-                            <Label Text="Absolute Best Route" FontSize="12" TextColor="#D0D0FF" FontAttributes="Bold"
-                                   HorizontalTextAlignment="Center" />
-                            <Label Text="{Binding WinnerText}" FontSize="22" FontAttributes="Bold" TextColor="White"
-                                   HorizontalTextAlignment="Center" />
+                        <Grid ColumnDefinitions="*, Auto">
+                            <VerticalStackLayout Grid.Column="0" Spacing="8">
+                                <Label Text="Absolute Best Route" FontSize="12" TextColor="#D0D0FF" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                                <Label Text="{Binding WinnerText}" FontSize="22" FontAttributes="Bold" TextColor="White" HorizontalTextAlignment="Center" />
 
-                            <HorizontalStackLayout HorizontalOptions="Center" Spacing="12" Margin="0,8,0,0">
-                                <Label
-                                    Text="{Binding CurrentBundle.Winner.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}"
-                                    FontSize="24" FontAttributes="Bold" TextColor="White" />
-                                <Label Text="•" FontSize="20" TextColor="#D0D0FF" VerticalOptions="Center" />
-                                <Label
-                                    Text="{Binding CurrentBundle.Winner.ArrivalTime, StringFormat='Arrive at {0:HH:mm}'}"
-                                    FontSize="16" TextColor="#D0D0FF" VerticalOptions="Center" />
-                            </HorizontalStackLayout>
+                                <HorizontalStackLayout HorizontalOptions="Center" Spacing="12" Margin="0,8,0,0">
+                                    <Label Text="{Binding CurrentBundle.Winner.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}" FontSize="24" FontAttributes="Bold" TextColor="White" />
+                                    <Label Text="•" FontSize="20" TextColor="#D0D0FF" VerticalOptions="Center" />
+                                    <Label Text="{Binding CurrentBundle.Winner.ArrivalTime, StringFormat='Arrive at {0:HH:mm}'}" FontSize="16" TextColor="#D0D0FF" VerticalOptions="Center" />
+                                </HorizontalStackLayout>
 
-                            <Border IsVisible="{Binding HasRunningAlternative}"
-                                    BackgroundColor="{StaticResource RunningOrange}" StrokeThickness="0" Padding="12,6"
-                                    HorizontalOptions="Center" StrokeShape="RoundRectangle 8" Margin="0,8,0,0">
-                                <Label Text="{Binding TimeSavedByRunningAlternativeText}" FontSize="13" FontAttributes="Bold"
-                                       TextColor="White" />
-                            </Border>
-                        </VerticalStackLayout>
+                                <Border IsVisible="{Binding HasWinnerBadge}"
+                                        BackgroundColor="{StaticResource RunningOrange}" StrokeThickness="0"
+                                        Padding="12,6"
+                                        HorizontalOptions="Center" StrokeShape="RoundRectangle 8" Margin="0,8,0,0">
+                                    <Label Text="{Binding WinnerBadgeText}" FontSize="13"
+                                           FontAttributes="Bold" TextColor="White" />
+                                </Border>
+                            </VerticalStackLayout>
+                            
+                            <Label Grid.Column="1" Text="❯" FontSize="24" FontAttributes="Bold" TextColor="#D0D0FF" VerticalOptions="Center" Margin="16,0,0,0" />
+                        </Grid>
                     </Border>
 
-                    <Label Text="TRIP DETAILS" Style="{StaticResource SectionLabel}" Margin="0,8,0,0" />
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding CurrentBundle.Winner.Segments}"
-                                         Spacing="0">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="entities:RouteSegment">
-                                <Grid ColumnDefinitions="50, *" RowDefinitions="Auto, Auto" Margin="0,0,0,16">
-
-                                    <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center" Spacing="4">
-                                        <Label Text="{Binding StartTime, StringFormat='{0:HH:mm}'}" FontSize="11"
-                                               TextColor="{StaticResource TextSecondary}"
-                                               HorizontalTextAlignment="Center" />
-                                        <BoxView WidthRequest="12" HeightRequest="12" CornerRadius="6"
-                                                 BackgroundColor="{StaticResource PrimaryAccent}" />
-                                        <BoxView WidthRequest="2" HeightRequest="40"
-                                                 BackgroundColor="{StaticResource SurfaceLighter}" Margin="0,2,0,0" />
-                                    </VerticalStackLayout>
-
-                                    <Border Grid.Column="1" Grid.RowSpan="2"
-                                            BackgroundColor="{StaticResource SurfaceColor}" StrokeThickness="0"
-                                            StrokeShape="RoundRectangle 12" Padding="16,12" VerticalOptions="Start">
-                                        <VerticalStackLayout Spacing="4">
-                                            <Label Text="{Binding Instruction}" FontSize="15" FontAttributes="Bold"
-                                                   TextColor="{StaticResource TextPrimary}" />
-                                            <HorizontalStackLayout Spacing="8">
-                                                <Label
-                                                    Text="{Binding Duration.TotalMinutes, StringFormat='{0:F0} min'}"
-                                                    FontSize="13" TextColor="{StaticResource TextSecondary}" />
-                                                <Label Text="•" TextColor="{StaticResource TextSecondary}"
-                                                       FontSize="13" />
-                                                <Label Text="{Binding DistanceMeters, StringFormat='{0:F0} m'}"
-                                                       FontSize="13" TextColor="{StaticResource TextSecondary}" />
-                                            </HorizontalStackLayout>
-
-                                            <Border IsVisible="{Binding HasWaitTime}"
-                                                    BackgroundColor="#2A2A40" StrokeThickness="0"
-                                                    StrokeShape="RoundRectangle 4" Padding="6,2"
-                                                    HorizontalOptions="Start" Margin="0,4,0,0">
-                                                <Label
-                                                    Text="{Binding WaitTimeAtDeparture, StringFormat='Wait {0:%m} min'}"
-                                                    FontSize="11" TextColor="{StaticResource WarningYellow}" />
-                                            </Border>
-                                        </VerticalStackLayout>
-                                    </Border>
-                                </Grid>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
                 </VerticalStackLayout>
-                
+                                
                 <VerticalStackLayout IsVisible="{Binding IsTransitTab}" Spacing="16">
                     <Label Text="Compare transit options" FontSize="14" TextColor="{StaticResource TextSecondary}" HorizontalTextAlignment="Center" />
                     
-                    <Border IsVisible="{Binding HasTimeMachineAlternative}" Style="{StaticResource CardBorder}" Stroke="{StaticResource RunningOrange}" StrokeThickness="2">
+                    <Border IsVisible="{Binding HasRunningAlternative}" Style="{StaticResource CardBorder}" Stroke="{StaticResource RunningOrange}" StrokeThickness="2">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding ViewRouteDetailsCommand}" CommandParameter="{Binding CurrentBundle.RunningAlternative}" />
                         </Border.GestureRecognizers>
@@ -265,9 +221,9 @@
                             <Label Grid.Row="0" Grid.Column="1" Text="Run to catch earlier bus" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
                             <Label Grid.Row="1" Grid.Column="1" Text="{Binding CurrentBundle.RunningAlternative.Summary}" FontSize="13" TextColor="{StaticResource TextSecondary}" LineBreakMode="TailTruncation" />
                             <HorizontalStackLayout Grid.Row="2" Grid.Column="1" Spacing="8">
-                                <Label Text="{Binding CurrentBundle.RunningAlternative.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource RunningOrange}" />
+                                <Label Text="{Binding CurrentBundle.RunningAlternative.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}" FontSize="14" TextColor="{StaticResource TextSecondary}" />
                                 <Label Text="•" TextColor="{StaticResource TextSecondary}" FontSize="14" />
-                                <Label Text="{Binding CurrentBundle.RunningAlternative.ArrivalTime, StringFormat='Arrive {0:HH:mm}'}" FontSize="14" TextColor="{StaticResource TextSecondary}" />
+                                <Label Text="{Binding CurrentBundle.RunningAlternative.ArrivalTime, StringFormat='Arrive {0:HH:mm}'}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource RunningOrange}" />
                             </HorizontalStackLayout>
                             <Label Grid.RowSpan="3" Grid.Column="2" Text="❯" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
                         </Grid>
@@ -282,9 +238,9 @@
                             <Label Grid.Row="0" Grid.Column="1" Text="Standard Transit" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
                             <Label Grid.Row="1" Grid.Column="1" Text="{Binding CurrentBundle.StandardTransit.Summary}" FontSize="13" TextColor="{StaticResource TextSecondary}" LineBreakMode="TailTruncation" />
                             <HorizontalStackLayout Grid.Row="2" Grid.Column="1" Spacing="8">
-                                <Label Text="{Binding CurrentBundle.StandardTransit.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                                <Label Text="{Binding CurrentBundle.StandardTransit.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}" FontSize="14" TextColor="{StaticResource TextSecondary}" />
                                 <Label Text="•" TextColor="{StaticResource TextSecondary}" FontSize="14" />
-                                <Label Text="{Binding CurrentBundle.StandardTransit.ArrivalTime, StringFormat='Arrive {0:HH:mm}'}" FontSize="14" TextColor="{StaticResource TextSecondary}" />
+                                <Label Text="{Binding CurrentBundle.StandardTransit.ArrivalTime, StringFormat='Arrive {0:HH:mm}'}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource PrimaryAccent}" />
                             </HorizontalStackLayout>
                             <Label Grid.RowSpan="3" Grid.Column="2" Text="❯" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
                         </Grid>
@@ -302,9 +258,9 @@
                             <Label Grid.RowSpan="2" Grid.Column="0" Text="🏃" FontSize="32" VerticalOptions="Center" />
                             <Label Grid.Row="0" Grid.Column="1" Text="Pure Run" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
                             <HorizontalStackLayout Grid.Row="1" Grid.Column="1" Spacing="8">
-                                <Label Text="{Binding CurrentBundle.PureRunning.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource RunningOrange}" />
+                                <Label Text="{Binding CurrentBundle.PureRunning.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}" FontSize="14" TextColor="{StaticResource TextSecondary}" />
                                 <Label Text="•" TextColor="{StaticResource TextSecondary}" FontSize="14"/>
-                                <Label Text="{Binding CurrentBundle.PureRunning.ArrivalTime, StringFormat='Arrive {0:HH:mm}'}" FontSize="14" TextColor="{StaticResource TextSecondary}" />
+                                <Label Text="{Binding CurrentBundle.PureRunning.ArrivalTime, StringFormat='Arrive {0:HH:mm}'}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource RunningOrange}" />
                             </HorizontalStackLayout>
                             <Label Grid.RowSpan="2" Grid.Column="2" Text="❯" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
                         </Grid>
@@ -318,9 +274,9 @@
                             <Label Grid.RowSpan="2" Grid.Column="0" Text="🚶" FontSize="32" VerticalOptions="Center" />
                             <Label Grid.Row="0" Grid.Column="1" Text="Pure Walk" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
                             <HorizontalStackLayout Grid.Row="1" Grid.Column="1" Spacing="8">
-                                <Label Text="{Binding CurrentBundle.PureWalking.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                                <Label Text="{Binding CurrentBundle.PureWalking.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}" FontSize="14" TextColor="{StaticResource TextSecondary}" />
                                 <Label Text="•" TextColor="{StaticResource TextSecondary}" FontSize="14" />
-                                <Label Text="{Binding CurrentBundle.PureWalking.ArrivalTime, StringFormat='Arrive {0:HH:mm}'}" FontSize="14" TextColor="{StaticResource TextSecondary}" />
+                                <Label Text="{Binding CurrentBundle.PureWalking.ArrivalTime, StringFormat='Arrive {0:HH:mm}'}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource PrimaryAccent}" />
                             </HorizontalStackLayout>
                             <Label Grid.RowSpan="2" Grid.Column="2" Text="❯" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
                         </Grid>

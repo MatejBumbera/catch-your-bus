@@ -69,17 +69,25 @@
                     <DataTemplate x:DataType="entities:RouteSegment">
                         <Grid ColumnDefinitions="60, *" RowDefinitions="Auto, Auto" Margin="0,0,0,16">
 
-                            <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center" Spacing="4">
-                                <Label Text="{Binding StartTime, StringFormat='{0:HH:mm}'}" FontSize="12"
+                            <Grid Grid.Column="0" RowDefinitions="Auto, *, Auto" RowSpacing="0"
+                                  HorizontalOptions="Center" WidthRequest="60">
+                                <VerticalStackLayout Grid.Row="0" HorizontalOptions="Center" Spacing="0">
+                                    <Label Text="{Binding StartTime, StringFormat='{0:HH:mm}'}" FontSize="12"
+                                           FontAttributes="Bold" TextColor="{StaticResource TextSecondary}"
+                                           HorizontalTextAlignment="Center" Margin="0,0,0,2" />
+                                    <BoxView WidthRequest="14" HeightRequest="14" CornerRadius="7"
+                                             BackgroundColor="{StaticResource PrimaryAccent}"
+                                             HorizontalOptions="Center" />
+                                </VerticalStackLayout>
+
+                                <BoxView Grid.Row="1" WidthRequest="2"
+                                         BackgroundColor="{StaticResource SurfaceLighter}" Margin="0"
+                                         HorizontalOptions="Center" VerticalOptions="Fill" />
+                                <Label Grid.Row="2" Text="{Binding EndTime, StringFormat='{0:HH:mm}'}" FontSize="12"
                                        FontAttributes="Bold" TextColor="{StaticResource TextSecondary}"
-                                       HorizontalTextAlignment="Center" />
-                                <BoxView WidthRequest="14" HeightRequest="14" CornerRadius="7"
-                                         BackgroundColor="{StaticResource PrimaryAccent}" />
-                                <BoxView WidthRequest="2" HeightRequest="60"
-                                         BackgroundColor="{StaticResource SurfaceLighter}" Margin="0,2,0,0"
-                                         VerticalOptions="FillAndExpand" />
-                            </VerticalStackLayout>
-                            
+                                       HorizontalTextAlignment="Center" Margin="0,2,0,0" />
+                            </Grid>
+
                             <Border Grid.Column="1" Grid.RowSpan="2" BackgroundColor="{StaticResource SurfaceColor}"
                                     StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="16,14"
                                     VerticalOptions="Start">
@@ -99,6 +107,15 @@
                                     <Label Text="{Binding Instruction}" FontSize="16" FontAttributes="Bold"
                                            TextColor="{StaticResource TextPrimary}" />
 
+                                    <HorizontalStackLayout
+                                        IsVisible="{Binding DepartureStopName, Converter={StaticResource IsNotNullConverter}}"
+                                        Spacing="6">
+                                        <Label Text="📍" FontSize="12" VerticalOptions="Center" />
+                                        <Label Text="{Binding DepartureStopName, StringFormat='Board at {0}'}"
+                                               FontSize="14" TextColor="{StaticResource TextPrimary}"
+                                               VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
                                     <HorizontalStackLayout Spacing="8">
                                         <Label Text="{Binding Duration.TotalMinutes, StringFormat='{0:F0} min'}"
                                                FontSize="13" TextColor="{StaticResource TextSecondary}" />
@@ -111,6 +128,15 @@
                                         <Label Text="{Binding NumberOfStops, StringFormat='{0} stops'}" FontSize="13"
                                                TextColor="{StaticResource TextSecondary}"
                                                IsVisible="{Binding NumberOfStops, Converter={StaticResource IsNotNullConverter}}" />
+                                    </HorizontalStackLayout>
+
+                                    <HorizontalStackLayout
+                                        IsVisible="{Binding ArrivalStopName, Converter={StaticResource IsNotNullConverter}}"
+                                        Spacing="6">
+                                        <Label Text="🏁" FontSize="12" VerticalOptions="Center" />
+                                        <Label Text="{Binding ArrivalStopName, StringFormat='Get off at {0}'}"
+                                               FontSize="14" TextColor="{StaticResource TextPrimary}"
+                                               VerticalOptions="Center" />
                                     </HorizontalStackLayout>
 
                                     <Border IsVisible="{Binding HasWaitTime}" BackgroundColor="#2A2A40"

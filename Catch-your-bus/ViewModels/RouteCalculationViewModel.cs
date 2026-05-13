@@ -48,7 +48,7 @@ public partial class RouteCalculationViewModel(
     [NotifyPropertyChangedFor(nameof(IsFastestTab))]
     [NotifyPropertyChangedFor(nameof(IsTransitTab))]
     [NotifyPropertyChangedFor(nameof(IsOnFootTab))]
-    public partial TravelTab SelectedTab { get; set; } = TravelTab.Fastest;
+    public partial TravelTab SelectedTab { get; set; } = TravelTab.Transit;
 
     public bool IsFastestTab => SelectedTab == TravelTab.Fastest;
     public bool IsTransitTab => SelectedTab == TravelTab.Transit;
@@ -60,7 +60,8 @@ public partial class RouteCalculationViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasBundle))]
     [NotifyPropertyChangedFor(nameof(WinnerText))]
-    [NotifyPropertyChangedFor(nameof(TimeSavedByRunningAlternativeText))]
+    [NotifyPropertyChangedFor(nameof(HasWinnerBadge))]
+    [NotifyPropertyChangedFor(nameof(WinnerBadgeText))]
     [NotifyPropertyChangedFor(nameof(HasRunningAlternative))]
     [NotifyPropertyChangedFor(nameof(StandardTransitWarning))]
     public partial RouteOptionsBundle? CurrentBundle { get; set; }
@@ -82,13 +83,29 @@ public partial class RouteCalculationViewModel(
         RouteType.StandardTransit => "🚌 Take the standard transit route.",
         _ => string.Empty
     };
-
+    
     public bool HasRunningAlternative => CurrentBundle?.IsRunningAlternativeBetter == true;
+    
+    public bool HasWinnerBadge => !string.IsNullOrEmpty(WinnerBadgeText);
+    public string WinnerBadgeText
+    {
+        get
+        {
+            if (CurrentBundle?.Winner == null || CurrentBundle?.StandardTransit == null ||
+                CurrentBundle.Winner.Type == RouteType.StandardTransit)
+                return string.Empty;
 
-    public string TimeSavedByRunningAlternativeText => CurrentBundle?.IsRunningAlternativeBetter == true
-        ? $"Saves {FormatDuration(CurrentBundle.RunningAlternativeTimeSaved)} by running!"
-        : string.Empty;
+            var standardArrival = CurrentBundle.StandardTransit.ArrivalTime;
+            var winnerArrival = CurrentBundle.Winner.ArrivalTime;
 
+            if (!standardArrival.HasValue || !winnerArrival.HasValue || winnerArrival.Value >= standardArrival.Value)
+                return string.Empty;
+            var timeSaved = standardArrival.Value - winnerArrival.Value;
+            return $"Saves {FormatDuration(timeSaved)} vs standard transit!";
+
+        }
+    }
+    
     /// <summary>
     /// Checks if the user needs to leave within the next 3 minutes for the very first step of their journey.
     /// </summary>
@@ -228,7 +245,7 @@ public partial class RouteCalculationViewModel(
         ErrorMessage = null;
         CurrentBundle = null;
         
-        SelectedTab = TravelTab.Fastest;
+        SelectedTab = TravelTab.Transit;
 
         try
         {
