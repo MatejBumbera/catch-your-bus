@@ -73,10 +73,6 @@
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0"/>
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Models\Services\" />
-    </ItemGroup>
     
     <ItemGroup>
       <ProjectReference Include="..\DAL\DAL.csproj" />

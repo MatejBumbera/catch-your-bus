@@ -33,6 +33,7 @@ public static class MauiProgram
             new GooglePlacesService(client, Config.GoogleApiKey));
         
         builder.Services.AddSingleton<UserPreferencesService>();
+        builder.Services.AddTransient<FavoriteRoutesService>();
         builder.Services.AddTransient<IRouteCalculationService, RouteCalculationService>();
 
         builder.Services.AddTransient<RouteCalculationViewModel>();

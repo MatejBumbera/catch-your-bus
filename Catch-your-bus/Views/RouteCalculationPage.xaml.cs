@@ -21,6 +21,12 @@ public partial class RouteCalculationPage : ContentPage
         _viewModel = viewModel;
         BindingContext = viewModel;
     }
+    
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await _viewModel.LoadFavoritesCommand.ExecuteAsync(null);
+    }
 
     private async void OnStartTextChanged(object? sender, TextChangedEventArgs e)
     {

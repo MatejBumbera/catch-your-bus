@@ -4,6 +4,7 @@ using Catch_your_bus.Models.External.GooglePlaces.Response;
 using Catch_your_bus.Models.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DAL.Entities;
 
 namespace Catch_your_bus.ViewModels;
 
@@ -16,7 +17,8 @@ public enum TravelTab
 
 public partial class RouteCalculationViewModel(
     IRouteCalculationService routeService,
-    IGooglePlacesService placesService) : ObservableObject
+    IGooglePlacesService placesService,
+    FavoriteRoutesService favoritesService) : ObservableObject
 {
     private const int DebounceDelayMs = 500;
     private const int MinQueryLength = 3;
@@ -26,7 +28,13 @@ public partial class RouteCalculationViewModel(
 
     private bool _isSelectingStart;
     private bool _isSelectingEnd;
+    
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasFavorites))]
+    public partial ObservableCollection<FavoriteRoute> Favorites { get; set; } = [];
 
+    public bool HasFavorites => Favorites.Count > 0;
+    
     [ObservableProperty] public partial string StartQuery { get; set; } = string.Empty;
     [ObservableProperty] public partial string EndQuery { get; set; } = string.Empty;
 
@@ -38,8 +46,15 @@ public partial class RouteCalculationViewModel(
     [NotifyPropertyChangedFor(nameof(HasEndPredictions))]
     public partial ObservableCollection<PlacePrediction> EndPredictions { get; set; } = [];
 
-    [ObservableProperty] public partial PlaceLocation? SelectedStartLocation { get; set; }
-    [ObservableProperty] public partial PlaceLocation? SelectedEndLocation { get; set; }
+    [NotifyPropertyChangedFor(nameof(CanSaveCurrentRoute))]
+    [ObservableProperty]
+    public partial PlaceLocation? SelectedStartLocation { get; set; }
+
+    [NotifyPropertyChangedFor(nameof(CanSaveCurrentRoute))]
+    [ObservableProperty]
+    public partial PlaceLocation? SelectedEndLocation { get; set; }
+    
+    public bool CanSaveCurrentRoute => SelectedStartLocation is not null && SelectedEndLocation is not null;
 
     public bool HasStartPredictions => StartPredictions.Count > 0;
     public bool HasEndPredictions => EndPredictions.Count > 0;
@@ -279,6 +294,50 @@ public partial class RouteCalculationViewModel(
         {
             IsLoading = false;
         }
+    }
+    
+    [RelayCommand]
+    public async Task LoadFavoritesAsync()
+    {
+        var favs = await favoritesService.GetFavoritesAsync();
+        Favorites = new ObservableCollection<FavoriteRoute>(favs);
+    }
+
+    [RelayCommand]
+    private async Task SaveCurrentRouteAsync()
+    {
+        if (!CanSaveCurrentRoute) return;
+        
+        var routeName = await Shell.Current.DisplayPromptAsync(
+            "Save Favorite", 
+            "Give this route a name (e.g. Home to Work):", 
+            "Save", "Cancel");
+
+        if (string.IsNullOrWhiteSpace(routeName)) return;
+
+        await favoritesService.AddFavoriteAsync(
+            routeName,
+            StartQuery, SelectedStartLocation!.Latitude, SelectedStartLocation.Longitude,
+            EndQuery, SelectedEndLocation!.Latitude, SelectedEndLocation.Longitude);
+        
+        await LoadFavoritesAsync();
+    }
+
+    [RelayCommand]
+    private void SelectFavorite(FavoriteRoute favorite)
+    {
+        // We don't want to trigger google api here since we already have coords
+        _isSelectingStart = true;
+        _isSelectingEnd = true;
+        
+        StartQuery = favorite.StartLocationName;
+        EndQuery = favorite.EndLocationName;
+
+        SelectedStartLocation = new PlaceLocation { Latitude = favorite.StartLat, Longitude = favorite.StartLng };
+        SelectedEndLocation = new PlaceLocation { Latitude = favorite.EndLat, Longitude = favorite.EndLng };
+        
+        _isSelectingStart = false;
+        _isSelectingEnd = false;
     }
 
     private static void CancelAndDispose(ref CancellationTokenSource? cts)

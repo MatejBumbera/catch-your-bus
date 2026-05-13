@@ -7,6 +7,7 @@
     xmlns:response="clr-namespace:Catch_your_bus.Models.External.GooglePlaces.Response"
     xmlns:entities="clr-namespace:Catch_your_bus.Models.Entities"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:entities1="clr-namespace:DAL.Entities;assembly=DAL"
     x:DataType="vm:RouteCalculationViewModel"
     Title="Route Calculator"
     BackgroundColor="#1A1A2E">
@@ -61,6 +62,22 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="16">
+            
+            <VerticalStackLayout IsVisible="{Binding HasFavorites}" Spacing="8" Margin="0,0,0,8">
+                <Label Style="{StaticResource SectionLabel}" Text="SAVED ROUTES" />
+                <CollectionView ItemsSource="{Binding Favorites}" ItemsLayout="HorizontalList" HeightRequest="40">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="entities1:FavoriteRoute">
+                            <Border BackgroundColor="{StaticResource SurfaceLighter}" StrokeThickness="0" StrokeShape="RoundRectangle 20" Padding="16,0" Margin="0,0,8,0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:RouteCalculationViewModel}}, Path=SelectFavoriteCommand}" CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <Label Text="{Binding Name, StringFormat='⭐ {0}'}" TextColor="{StaticResource TextPrimary}" FontSize="13" FontAttributes="Bold" VerticalOptions="Center" />
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
 
             <Label Text="🚌 Catch Your Bus!" FontSize="28" FontAttributes="Bold"
                    TextColor="{StaticResource TextPrimary}" HorizontalTextAlignment="Center" Margin="0,8,0,4" />
@@ -110,6 +127,19 @@
                 </VerticalStackLayout>
             </Border>
 
+            <Button Text="⭐ Save Route to Favorites" 
+                    Command="{Binding SaveCurrentRouteCommand}" 
+                    IsVisible="{Binding CanSaveCurrentRoute}"
+                    FontSize="14" 
+                    FontAttributes="Bold" 
+                    TextColor="{StaticResource WarningYellow}" 
+                    BackgroundColor="Transparent" 
+                    BorderColor="{StaticResource WarningYellow}"
+                    BorderWidth="1"
+                    CornerRadius="14" 
+                    HeightRequest="44" 
+                    Margin="0,-8,0,0" />
+            
             <Button Text="Calculate Route" Command="{Binding CalculateBestRouteCommand}" FontSize="16"
                     FontAttributes="Bold" TextColor="White" BackgroundColor="{StaticResource PrimaryAccent}"
                     CornerRadius="14" HeightRequest="52" Margin="0,4,0,0" x:Name="CalculateButton" />
