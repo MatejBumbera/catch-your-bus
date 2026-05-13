@@ -9,6 +9,18 @@ public partial class RouteCalculationViewModel(
     IRouteCalculationService routeService) : ObservableObject
 {
     [ObservableProperty]
+    private double startLat;
+
+    [ObservableProperty]
+    private double startLng;
+
+    [ObservableProperty]
+    private double endLat;
+
+    [ObservableProperty]
+    private double endLng;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasResult))]
     [NotifyPropertyChangedFor(nameof(WinnerText))]
     [NotifyPropertyChangedFor(nameof(DifferenceText))]
@@ -23,7 +35,7 @@ public partial class RouteCalculationViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
     private string? errorMessage;
-
+    
     public bool HasResult => CurrentResult is not null;
 
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
@@ -44,17 +56,17 @@ public partial class RouteCalculationViewModel(
         _ => $"Saves {FormatDuration(CurrentResult.Difference)}"
     };
 
-    public bool IsRunningAlternative => 
+    public bool IsRunningAlternative =>
         CurrentResult?.TransitRoute.Type == RouteType.RunningAlternative;
 
-    public string TransitRouteSummary => 
+    public string TransitRouteSummary =>
         CurrentResult?.TransitRoute.Summary ?? string.Empty;
 
-    public string FootRouteSummary => 
+    public string FootRouteSummary =>
         CurrentResult?.FootRoute.Summary ?? string.Empty;
-
+    
     [RelayCommand]
-    private async Task CalculateBestRouteAsync(LocationData request)
+    private async Task CalculateBestRouteAsync()
     {
         IsLoading = true;
         ErrorMessage = null;
@@ -63,8 +75,7 @@ public partial class RouteCalculationViewModel(
         try
         {
             var result = await routeService.CompareFastestModeAsync(
-                request.StartLat, request.StartLng,
-                request.EndLat, request.EndLng);
+                StartLat, StartLng, EndLat, EndLng);
 
             if (result is null)
             {
