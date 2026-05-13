@@ -1,6 +1,7 @@
 using Catch_your_bus.Models.Services;
 using Catch_your_bus.ViewModels;
 using Catch_your_bus.Views;
+using CommunityToolkit.Maui;
 using DAL;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,7 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseMauiCommunityToolkit()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -36,6 +38,9 @@ public static class MauiProgram
         builder.Services.AddTransient<RouteCalculationViewModel>();
 
         builder.Services.AddTransient<RouteCalculationPage>();
+        
+        builder.Services.AddTransient<RouteDetailsViewModel>();
+        builder.Services.AddTransient<RouteDetailsPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

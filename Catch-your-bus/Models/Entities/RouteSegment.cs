@@ -61,4 +61,5 @@ public class RouteSegment
     public string? DepartureStopName { get; set; }
     public string? ArrivalStopName { get; set; }
     public int? NumberOfStops { get; set; }
+    public bool HasWaitTime => WaitTimeAtDeparture.HasValue;
 }

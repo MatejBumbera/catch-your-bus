@@ -66,6 +66,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="CommunityToolkit.Maui" Version="9.1.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.7" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.7" />
@@ -75,7 +76,6 @@
 
     <ItemGroup>
       <Folder Include="Models\Services\" />
-      <Folder Include="ViewModels\" />
     </ItemGroup>
     
     <ItemGroup>

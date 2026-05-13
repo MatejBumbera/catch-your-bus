@@ -1,11 +1,12 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <ContentPage
     x:Class="Catch_your_bus.Views.RouteCalculationPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:Catch_your_bus.ViewModels"
-    xmlns:places="clr-namespace:Catch_your_bus.Models.External.GooglePlaces"
     xmlns:response="clr-namespace:Catch_your_bus.Models.External.GooglePlaces.Response"
+    xmlns:entities="clr-namespace:Catch_your_bus.Models.Entities"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     x:DataType="vm:RouteCalculationViewModel"
     Title="Route Calculator"
     BackgroundColor="#1A1A2E">
@@ -18,8 +19,12 @@
             <Color x:Key="TextPrimary">#E8E8E8</Color>
             <Color x:Key="TextSecondary">#A0A0B0</Color>
             <Color x:Key="ErrorRed">#FF6B6B</Color>
+            <Color x:Key="WarningYellow">#FFD166</Color>
             <Color x:Key="SuccessGreen">#4ECDC4</Color>
             <Color x:Key="RunningOrange">#FF8C42</Color>
+            
+            <toolkit:IsStringNotNullOrEmptyConverter x:Key="StringIsNotNullOrEmptyConverter" />
+            <toolkit:IsStringNotNullOrEmptyConverter x:Key="IsNotNullConverter" />
 
             <Style x:Key="CardBorder" TargetType="Border">
                 <Setter Property="BackgroundColor" Value="{StaticResource SurfaceColor}" />
@@ -42,247 +47,287 @@
                 <Setter Property="FontSize" Value="15" />
                 <Setter Property="HeightRequest" Value="48" />
             </Style>
+
+            <Style x:Key="TabButton" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="Transparent" />
+                <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="HeightRequest" Value="40" />
+            </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
 
     <ScrollView>
-        <VerticalStackLayout
-            Padding="20"
-            Spacing="16">
+        <VerticalStackLayout Padding="20" Spacing="16">
 
-            <Label
-                Text="🚌 Catch Your Bus!"
-                FontSize="28"
-                FontAttributes="Bold"
-                TextColor="{StaticResource TextPrimary}"
-                HorizontalTextAlignment="Center"
-                Margin="0,8,0,4" />
-
-            <Label
-                Text="Find out if you should run or ride"
-                FontSize="14"
-                TextColor="{StaticResource TextSecondary}"
-                HorizontalTextAlignment="Center"
-                Margin="0,0,0,8" />
+            <Label Text="🚌 Catch Your Bus!" FontSize="28" FontAttributes="Bold"
+                   TextColor="{StaticResource TextPrimary}" HorizontalTextAlignment="Center" Margin="0,8,0,4" />
+            <Label Text="Find out if you should run or ride" FontSize="14" TextColor="{StaticResource TextSecondary}"
+                   HorizontalTextAlignment="Center" Margin="0,0,0,8" />
 
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="8">
-                    <Label
-                        Style="{StaticResource SectionLabel}"
-                        Text="START LOCATION" />
-
-                    <Entry
-                        Style="{StaticResource SearchEntry}"
-                        Placeholder="Search for a place..."
-                        Text="{Binding StartQuery, Mode=TwoWay}"
-                        x:Name="StartEntry"
-                        TextChanged="OnStartTextChanged" />
-                    
-                    <CollectionView
-                        ItemsSource="{Binding StartPredictions}"
-                        IsVisible="{Binding HasStartPredictions}"
-                        SelectionMode="Single"
-                        SelectionChanged="OnStartPredictionSelected"
-                        HeightRequest="180">
+                    <Label Style="{StaticResource SectionLabel}" Text="START LOCATION" />
+                    <Entry Style="{StaticResource SearchEntry}" Placeholder="Search for a place..."
+                           Text="{Binding StartQuery, Mode=TwoWay}" x:Name="StartEntry"
+                           TextChanged="OnStartTextChanged" />
+                    <CollectionView ItemsSource="{Binding StartPredictions}" IsVisible="{Binding HasStartPredictions}"
+                                    SelectionMode="Single" SelectionChanged="OnStartPredictionSelected"
+                                    HeightRequest="180">
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="response:PlacePrediction">
-                                <Border
-                                    BackgroundColor="{StaticResource SurfaceLighter}"
-                                    StrokeThickness="0"
-                                    Padding="14,10"
-                                    Margin="0,2"
-                                    StrokeShape="RoundRectangle 8">
-                                    <Label
-                                        Text="{Binding DisplayText}"
-                                        TextColor="{StaticResource TextPrimary}"
-                                        FontSize="14"
-                                        LineBreakMode="TailTruncation" />
+                                <Border BackgroundColor="{StaticResource SurfaceLighter}" StrokeThickness="0"
+                                        Padding="14,10" Margin="0,2" StrokeShape="RoundRectangle 8">
+                                    <Label Text="{Binding DisplayText}" TextColor="{StaticResource TextPrimary}"
+                                           FontSize="14" LineBreakMode="TailTruncation" />
                                 </Border>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
                 </VerticalStackLayout>
             </Border>
-            
+
             <Border Style="{StaticResource CardBorder}">
                 <VerticalStackLayout Spacing="8">
-                    <Label
-                        Style="{StaticResource SectionLabel}"
-                        Text="DESTINATION" />
-
-                    <Entry
-                        Style="{StaticResource SearchEntry}"
-                        Placeholder="Search for a place..."
-                        Text="{Binding EndQuery, Mode=TwoWay}"
-                        x:Name="EndEntry"
-                        TextChanged="OnEndTextChanged" />
-                    
-                    <CollectionView
-                        ItemsSource="{Binding EndPredictions}"
-                        IsVisible="{Binding HasEndPredictions}"
-                        SelectionMode="Single"
-                        SelectionChanged="OnEndPredictionSelected"
-                        HeightRequest="180">
+                    <Label Style="{StaticResource SectionLabel}" Text="DESTINATION" />
+                    <Entry Style="{StaticResource SearchEntry}" Placeholder="Search for a place..."
+                           Text="{Binding EndQuery, Mode=TwoWay}" x:Name="EndEntry" TextChanged="OnEndTextChanged" />
+                    <CollectionView ItemsSource="{Binding EndPredictions}" IsVisible="{Binding HasEndPredictions}"
+                                    SelectionMode="Single" SelectionChanged="OnEndPredictionSelected"
+                                    HeightRequest="180">
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="response:PlacePrediction">
-                                <Border
-                                    BackgroundColor="{StaticResource SurfaceLighter}"
-                                    StrokeThickness="0"
-                                    Padding="14,10"
-                                    Margin="0,2"
-                                    StrokeShape="RoundRectangle 8">
-                                    <Label
-                                        Text="{Binding DisplayText}"
-                                        TextColor="{StaticResource TextPrimary}"
-                                        FontSize="14"
-                                        LineBreakMode="TailTruncation" />
+                                <Border BackgroundColor="{StaticResource SurfaceLighter}" StrokeThickness="0"
+                                        Padding="14,10" Margin="0,2" StrokeShape="RoundRectangle 8">
+                                    <Label Text="{Binding DisplayText}" TextColor="{StaticResource TextPrimary}"
+                                           FontSize="14" LineBreakMode="TailTruncation" />
                                 </Border>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
                 </VerticalStackLayout>
             </Border>
-            
-            <Button
-                Text="Calculate Route"
-                Command="{Binding CalculateBestRouteCommand}"
-                FontSize="16"
-                FontAttributes="Bold"
-                TextColor="White"
-                BackgroundColor="{StaticResource PrimaryAccent}"
-                CornerRadius="14"
-                HeightRequest="52"
-                Margin="0,4,0,0"
-                x:Name="CalculateButton" />
 
-            <ActivityIndicator
-                IsRunning="{Binding IsLoading}"
-                IsVisible="{Binding IsLoading}"
-                Color="{StaticResource PrimaryAccent}"
-                HeightRequest="40"
-                HorizontalOptions="Center" />
+            <Button Text="Calculate Route" Command="{Binding CalculateBestRouteCommand}" FontSize="16"
+                    FontAttributes="Bold" TextColor="White" BackgroundColor="{StaticResource PrimaryAccent}"
+                    CornerRadius="14" HeightRequest="52" Margin="0,4,0,0" x:Name="CalculateButton" />
 
-            <Border
-                IsVisible="{Binding HasError}"
-                BackgroundColor="#3D1515"
-                StrokeThickness="1"
-                Stroke="{StaticResource ErrorRed}"
-                Padding="16"
-                StrokeShape="RoundRectangle 12">
-                <Label
-                    Text="{Binding ErrorMessage}"
-                    TextColor="{StaticResource ErrorRed}"
-                    FontSize="14"
-                    HorizontalTextAlignment="Center" />
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                               Color="{StaticResource PrimaryAccent}" HeightRequest="40" HorizontalOptions="Center" />
+
+            <Border IsVisible="{Binding HasError}" BackgroundColor="#3D1515" StrokeThickness="1"
+                    Stroke="{StaticResource ErrorRed}" Padding="16" StrokeShape="RoundRectangle 12">
+                <Label Text="{Binding ErrorMessage}" TextColor="{StaticResource ErrorRed}" FontSize="14"
+                       HorizontalTextAlignment="Center" />
             </Border>
 
-            <Border
-                IsVisible="{Binding HasResult}"
-                Padding="24"
-                StrokeThickness="0"
-                StrokeShape="RoundRectangle 20"
-                x:Name="WinnerBanner">
-                <Border.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#6C63FF" Offset="0.0" />
-                        <GradientStop Color="#3F3D94" Offset="1.0" />
-                    </LinearGradientBrush>
-                </Border.Background>
+            <VerticalStackLayout IsVisible="{Binding HasBundle}" Spacing="16" Margin="0,8,0,20">
 
-                <VerticalStackLayout Spacing="8">
-                    <Label
-                        Text="{Binding WinnerText}"
-                        FontSize="24"
-                        FontAttributes="Bold"
-                        TextColor="White"
-                        HorizontalTextAlignment="Center" />
+                <Border
+                    IsVisible="{Binding StandardTransitWarning, Converter={StaticResource StringIsNotNullOrEmptyConverter}, FallbackValue=False}"
+                    BackgroundColor="#4D2B18" Stroke="{StaticResource RunningOrange}" StrokeThickness="1"
+                    StrokeShape="RoundRectangle 12" Padding="12">
+                    <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                        <Label Text="⚠️" FontSize="18" VerticalOptions="Center" />
+                        <Label Text="{Binding StandardTransitWarning}" TextColor="{StaticResource RunningOrange}"
+                               FontSize="15" FontAttributes="Bold" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
 
-                    <Label
-                        Text="{Binding DifferenceText}"
-                        FontSize="16"
-                        TextColor="#D0D0FF"
-                        HorizontalTextAlignment="Center" />
+                <Border BackgroundColor="{StaticResource SurfaceLighter}" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="4">
+                    <Grid ColumnDefinitions="*,*,*">
+                        <Button Grid.Column="0" Text="🏆 Fastest" Command="{Binding SwitchTabCommand}"
+                                CommandParameter="{x:Static vm:TravelTab.Fastest}" Style="{StaticResource TabButton}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsFastestTab}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource PrimaryAccent}" />
+                                    <Setter Property="TextColor" Value="White" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Grid.Column="1" Text="🚌 Transit" Command="{Binding SwitchTabCommand}"
+                                CommandParameter="{x:Static vm:TravelTab.Transit}" Style="{StaticResource TabButton}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsTransitTab}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource PrimaryAccent}" />
+                                    <Setter Property="TextColor" Value="White" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Grid.Column="2" Text="👟 On Foot" Command="{Binding SwitchTabCommand}"
+                                CommandParameter="{x:Static vm:TravelTab.OnFoot}" Style="{StaticResource TabButton}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsOnFootTab}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource PrimaryAccent}" />
+                                    <Setter Property="TextColor" Value="White" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </Grid>
+                </Border>
 
-                    <Border
-                        IsVisible="{Binding IsRunningAlternative}"
-                        BackgroundColor="{StaticResource RunningOrange}"
-                        StrokeThickness="0"
-                        Padding="12,8"
-                        HorizontalOptions="Center"
-                        StrokeShape="RoundRectangle 10"
-                        Margin="0,8,0,0">
-                        <Label
-                            Text="🔥 Run to catch an earlier bus!"
-                            FontSize="14"
-                            FontAttributes="Bold"
-                            TextColor="White"
-                            HorizontalTextAlignment="Center" />
+                <VerticalStackLayout IsVisible="{Binding IsFastestTab}" Spacing="16">
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#6C63FF" Offset="0.0" />
+                                <GradientStop Color="#3F3D94" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Absolute Best Route" FontSize="12" TextColor="#D0D0FF" FontAttributes="Bold"
+                                   HorizontalTextAlignment="Center" />
+                            <Label Text="{Binding WinnerText}" FontSize="22" FontAttributes="Bold" TextColor="White"
+                                   HorizontalTextAlignment="Center" />
+
+                            <HorizontalStackLayout HorizontalOptions="Center" Spacing="12" Margin="0,8,0,0">
+                                <Label
+                                    Text="{Binding CurrentBundle.Winner.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}"
+                                    FontSize="24" FontAttributes="Bold" TextColor="White" />
+                                <Label Text="•" FontSize="20" TextColor="#D0D0FF" VerticalOptions="Center" />
+                                <Label
+                                    Text="{Binding CurrentBundle.Winner.ArrivalTime, StringFormat='Arrive at {0:HH:mm}'}"
+                                    FontSize="16" TextColor="#D0D0FF" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+
+                            <Border IsVisible="{Binding HasRunningAlternative}"
+                                    BackgroundColor="{StaticResource RunningOrange}" StrokeThickness="0" Padding="12,6"
+                                    HorizontalOptions="Center" StrokeShape="RoundRectangle 8" Margin="0,8,0,0">
+                                <Label Text="{Binding TimeSavedByRunningAlternativeText}" FontSize="13" FontAttributes="Bold"
+                                       TextColor="White" />
+                            </Border>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Label Text="TRIP DETAILS" Style="{StaticResource SectionLabel}" Margin="0,8,0,0" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding CurrentBundle.Winner.Segments}"
+                                         Spacing="0">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="entities:RouteSegment">
+                                <Grid ColumnDefinitions="50, *" RowDefinitions="Auto, Auto" Margin="0,0,0,16">
+
+                                    <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center" Spacing="4">
+                                        <Label Text="{Binding StartTime, StringFormat='{0:HH:mm}'}" FontSize="11"
+                                               TextColor="{StaticResource TextSecondary}"
+                                               HorizontalTextAlignment="Center" />
+                                        <BoxView WidthRequest="12" HeightRequest="12" CornerRadius="6"
+                                                 BackgroundColor="{StaticResource PrimaryAccent}" />
+                                        <BoxView WidthRequest="2" HeightRequest="40"
+                                                 BackgroundColor="{StaticResource SurfaceLighter}" Margin="0,2,0,0" />
+                                    </VerticalStackLayout>
+
+                                    <Border Grid.Column="1" Grid.RowSpan="2"
+                                            BackgroundColor="{StaticResource SurfaceColor}" StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 12" Padding="16,12" VerticalOptions="Start">
+                                        <VerticalStackLayout Spacing="4">
+                                            <Label Text="{Binding Instruction}" FontSize="15" FontAttributes="Bold"
+                                                   TextColor="{StaticResource TextPrimary}" />
+                                            <HorizontalStackLayout Spacing="8">
+                                                <Label
+                                                    Text="{Binding Duration.TotalMinutes, StringFormat='{0:F0} min'}"
+                                                    FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                                                <Label Text="•" TextColor="{StaticResource TextSecondary}"
+                                                       FontSize="13" />
+                                                <Label Text="{Binding DistanceMeters, StringFormat='{0:F0} m'}"
+                                                       FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                                            </HorizontalStackLayout>
+
+                                            <Border IsVisible="{Binding HasWaitTime}"
+                                                    BackgroundColor="#2A2A40" StrokeThickness="0"
+                                                    StrokeShape="RoundRectangle 4" Padding="6,2"
+                                                    HorizontalOptions="Start" Margin="0,4,0,0">
+                                                <Label
+                                                    Text="{Binding WaitTimeAtDeparture, StringFormat='Wait {0:%m} min'}"
+                                                    FontSize="11" TextColor="{StaticResource WarningYellow}" />
+                                            </Border>
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+                
+                <VerticalStackLayout IsVisible="{Binding IsTransitTab}" Spacing="16">
+                    <Label Text="Compare transit options" FontSize="14" TextColor="{StaticResource TextSecondary}" HorizontalTextAlignment="Center" />
+                    
+                    <Border IsVisible="{Binding HasTimeMachineAlternative}" Style="{StaticResource CardBorder}" Stroke="{StaticResource RunningOrange}" StrokeThickness="2">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ViewRouteDetailsCommand}" CommandParameter="{Binding CurrentBundle.RunningAlternative}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="Auto, Auto, Auto" RowSpacing="4" ColumnSpacing="16">
+                            <Label Grid.RowSpan="3" Grid.Column="0" Text="🔥" FontSize="32" VerticalOptions="Center" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="Run to catch earlier bus" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding CurrentBundle.RunningAlternative.Summary}" FontSize="13" TextColor="{StaticResource TextSecondary}" LineBreakMode="TailTruncation" />
+                            <HorizontalStackLayout Grid.Row="2" Grid.Column="1" Spacing="8">
+                                <Label Text="{Binding CurrentBundle.RunningAlternative.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource RunningOrange}" />
+                                <Label Text="•" TextColor="{StaticResource TextSecondary}" FontSize="14" />
+                                <Label Text="{Binding CurrentBundle.RunningAlternative.ArrivalTime, StringFormat='Arrive {0:HH:mm}'}" FontSize="14" TextColor="{StaticResource TextSecondary}" />
+                            </HorizontalStackLayout>
+                            <Label Grid.RowSpan="3" Grid.Column="2" Text="❯" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                    
+                    <Border IsVisible="{Binding CurrentBundle.StandardTransit, Converter={StaticResource IsNotNullConverter}}" Style="{StaticResource CardBorder}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ViewRouteDetailsCommand}" CommandParameter="{Binding CurrentBundle.StandardTransit}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="Auto, Auto, Auto" RowSpacing="4" ColumnSpacing="16">
+                            <Label Grid.RowSpan="3" Grid.Column="0" Text="🚌" FontSize="32" VerticalOptions="Center" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="Standard Transit" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding CurrentBundle.StandardTransit.Summary}" FontSize="13" TextColor="{StaticResource TextSecondary}" LineBreakMode="TailTruncation" />
+                            <HorizontalStackLayout Grid.Row="2" Grid.Column="1" Spacing="8">
+                                <Label Text="{Binding CurrentBundle.StandardTransit.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                                <Label Text="•" TextColor="{StaticResource TextSecondary}" FontSize="14" />
+                                <Label Text="{Binding CurrentBundle.StandardTransit.ArrivalTime, StringFormat='Arrive {0:HH:mm}'}" FontSize="14" TextColor="{StaticResource TextSecondary}" />
+                            </HorizontalStackLayout>
+                            <Label Grid.RowSpan="3" Grid.Column="2" Text="❯" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                        </Grid>
                     </Border>
                 </VerticalStackLayout>
-            </Border>
+                
+                <VerticalStackLayout IsVisible="{Binding IsOnFootTab}" Spacing="16">
+                    <Label Text="Compare walking vs. running" FontSize="14" TextColor="{StaticResource TextSecondary}" HorizontalTextAlignment="Center" />
 
-            <Grid
-                IsVisible="{Binding HasResult}"
-                ColumnDefinitions="*,12,*"
-                RowDefinitions="Auto"
-                Margin="0,4,0,16">
+                    <Border IsVisible="{Binding CurrentBundle.PureRunning, Converter={StaticResource IsNotNullConverter}}" Style="{StaticResource CardBorder}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ViewRouteDetailsCommand}" CommandParameter="{Binding CurrentBundle.PureRunning}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="Auto, Auto" RowSpacing="4" ColumnSpacing="16">
+                            <Label Grid.RowSpan="2" Grid.Column="0" Text="🏃" FontSize="32" VerticalOptions="Center" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="Pure Run" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                            <HorizontalStackLayout Grid.Row="1" Grid.Column="1" Spacing="8">
+                                <Label Text="{Binding CurrentBundle.PureRunning.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource RunningOrange}" />
+                                <Label Text="•" TextColor="{StaticResource TextSecondary}" FontSize="14"/>
+                                <Label Text="{Binding CurrentBundle.PureRunning.ArrivalTime, StringFormat='Arrive {0:HH:mm}'}" FontSize="14" TextColor="{StaticResource TextSecondary}" />
+                            </HorizontalStackLayout>
+                            <Label Grid.RowSpan="2" Grid.Column="2" Text="❯" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                    
+                    <Border IsVisible="{Binding CurrentBundle.PureWalking, Converter={StaticResource IsNotNullConverter}}" Style="{StaticResource CardBorder}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ViewRouteDetailsCommand}" CommandParameter="{Binding CurrentBundle.PureWalking}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="Auto, Auto" RowSpacing="4" ColumnSpacing="16">
+                            <Label Grid.RowSpan="2" Grid.Column="0" Text="🚶" FontSize="32" VerticalOptions="Center" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="Pure Walk" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                            <HorizontalStackLayout Grid.Row="1" Grid.Column="1" Spacing="8">
+                                <Label Text="{Binding CurrentBundle.PureWalking.TotalDuration.TotalMinutes, StringFormat='{0:F0} min'}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                                <Label Text="•" TextColor="{StaticResource TextSecondary}" FontSize="14" />
+                                <Label Text="{Binding CurrentBundle.PureWalking.ArrivalTime, StringFormat='Arrive {0:HH:mm}'}" FontSize="14" TextColor="{StaticResource TextSecondary}" />
+                            </HorizontalStackLayout>
+                            <Label Grid.RowSpan="2" Grid.Column="2" Text="❯" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
 
-                <Border
-                    Grid.Column="0"
-                    Style="{StaticResource CardBorder}">
-                    <VerticalStackLayout Spacing="8">
-                        <Label
-                            Text="🚌"
-                            FontSize="28"
-                            HorizontalTextAlignment="Center" />
-                        <Label
-                            Text="Transit Option"
-                            FontSize="13"
-                            FontAttributes="Bold"
-                            TextColor="{StaticResource SuccessGreen}"
-                            HorizontalTextAlignment="Center" />
-                        <BoxView
-                            HeightRequest="1"
-                            Color="{StaticResource SurfaceLighter}"
-                            Margin="0,4" />
-                        <Label
-                            Text="{Binding TransitRouteSummary}"
-                            FontSize="13"
-                            TextColor="{StaticResource TextPrimary}"
-                            HorizontalTextAlignment="Center"
-                            LineBreakMode="WordWrap" />
-                    </VerticalStackLayout>
-                </Border>
-
-                <Border
-                    Grid.Column="2"
-                    Style="{StaticResource CardBorder}">
-                    <VerticalStackLayout Spacing="8">
-                        <Label
-                            Text="🏃"
-                            FontSize="28"
-                            HorizontalTextAlignment="Center" />
-                        <Label
-                            Text="Running Option"
-                            FontSize="13"
-                            FontAttributes="Bold"
-                            TextColor="{StaticResource RunningOrange}"
-                            HorizontalTextAlignment="Center" />
-                        <BoxView
-                            HeightRequest="1"
-                            Color="{StaticResource SurfaceLighter}"
-                            Margin="0,4" />
-                        <Label
-                            Text="{Binding FootRouteSummary}"
-                            FontSize="13"
-                            TextColor="{StaticResource TextPrimary}"
-                            HorizontalTextAlignment="Center"
-                            LineBreakMode="WordWrap" />
-                    </VerticalStackLayout>
-                </Border>
-            </Grid>
-
+            </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
-
 </ContentPage>
