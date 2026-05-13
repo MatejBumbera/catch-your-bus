@@ -299,8 +299,20 @@ public partial class RouteCalculationViewModel(
     [RelayCommand]
     public async Task LoadFavoritesAsync()
     {
-        var favs = await favoritesService.GetFavoritesAsync();
-        Favorites = new ObservableCollection<FavoriteRoute>(favs);
+        try
+        {
+            var favs = await favoritesService.GetFavoritesAsync();
+            Favorites = new ObservableCollection<FavoriteRoute>(favs);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"DB ERROR: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"INNER DB ERROR: {ex.InnerException.Message}");
+            }
+            ErrorMessage = "Failed to load favorites. Try again later.";
+        }
     }
 
     [RelayCommand]
