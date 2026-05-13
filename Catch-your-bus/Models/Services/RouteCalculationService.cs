@@ -100,11 +100,6 @@ public class RouteCalculationService(
             ? bestTransitRoute 
             : footRoute;
         
-        if (winner == footRoute) 
-        {
-            footRoute.Type = RouteType.FastestOverall;
-        }
-
         return new FastestModeResult
         {
             TransitRoute = bestTransitRoute,

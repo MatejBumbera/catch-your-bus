@@ -51,9 +51,4 @@ public enum RouteType
     /// Pure running route (no transit).
     /// </summary>
     PureRunning,
-
-    /// <summary>
-    /// Fastest mode — run the entire distance without transit.
-    /// </summary>
-    FastestOverall
 }
