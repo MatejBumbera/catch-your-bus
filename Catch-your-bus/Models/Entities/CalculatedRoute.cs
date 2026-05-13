@@ -1,8 +1,7 @@
 namespace Catch_your_bus.Models.Entities;
 
 /// <summary>
-/// DTO representing a fully calculated route from origin to destination,
-/// composed of one or more <see cref="RouteSegment"/>s.
+/// DTO representing a fully calculated route from origin to destination.
 /// </summary>
 public class CalculatedRoute
 {
@@ -12,19 +11,27 @@ public class CalculatedRoute
     public string Summary { get; set; } = string.Empty;
     
     public string StartLocationName { get; set; } = string.Empty;
-
     public string EndLocationName { get; set; } = string.Empty;
-
-    public TimeSpan TotalDuration { get; set; }
-
-    public double TotalDistanceMeters { get; set; }
     
-    public List<RouteSegment> Segments { get; set; } = new();
+    public TimeSpan TotalDuration { get; set; }
+    public double TotalDistanceMeters { get; set; }
 
-    /// <summary>
-    /// The type of route calculation that produced this result.
-    /// </summary>
+    public DateTimeOffset? DepartureTime { get; set; }
+    public DateTimeOffset? ArrivalTime { get; set; }
+
+    public List<RouteSegment> Segments { get; set; } = [];
+
     public RouteType Type { get; set; }
+    
+    /// <summary>
+    /// How many distinct transit vehicles the user must board.
+    /// </summary>
+    public int TransitLegCount => Segments.Count(s => s.Mode == TravelMode.Transit);
+    
+    /// <summary>
+    /// True if the user has to switch vehicles at least once.
+    /// </summary>
+    public bool RequiresTransfers => TransitLegCount > 1;
 }
 
 /// <summary>

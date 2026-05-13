@@ -1,4 +1,5 @@
 using Catch_your_bus.Models.External.GooglePlaces;
+using Catch_your_bus.Models.External.GooglePlaces.Response;
 using Catch_your_bus.ViewModels;
 
 namespace Catch_your_bus.Views;

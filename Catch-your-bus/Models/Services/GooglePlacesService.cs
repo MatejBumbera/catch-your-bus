@@ -1,5 +1,7 @@
 using System.Net.Http.Json;
 using Catch_your_bus.Models.External.GooglePlaces;
+using Catch_your_bus.Models.External.GooglePlaces.Request;
+using Catch_your_bus.Models.External.GooglePlaces.Response;
 
 namespace Catch_your_bus.Models.Services;
 

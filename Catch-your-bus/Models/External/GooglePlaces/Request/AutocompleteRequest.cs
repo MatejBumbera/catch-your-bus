@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Catch_your_bus.Models.External.GooglePlaces;
+namespace Catch_your_bus.Models.External.GooglePlaces.Request;
 
 public class AutocompleteRequest
 {

@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Catch_your_bus.Models.Entities;
 using Catch_your_bus.Models.External.GoogleRoutes;
 using Catch_your_bus.Models.External.GoogleRoutes.Request;
+using Catch_your_bus.Models.External.GoogleRoutes.Response;
 
 namespace Catch_your_bus.Models.Services;
 

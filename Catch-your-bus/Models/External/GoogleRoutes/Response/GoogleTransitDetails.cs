@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Catch_your_bus.Models.External.GoogleRoutes;
+namespace Catch_your_bus.Models.External.GoogleRoutes.Response;
 
 public class GoogleTransitDetails
 {
@@ -12,4 +12,7 @@ public class GoogleTransitDetails
 
     [JsonPropertyName("stopCount")]
     public int? StopCount { get; set; }
+
+    [JsonPropertyName("headsign")]
+    public string? Headsign { get; set; }
 }

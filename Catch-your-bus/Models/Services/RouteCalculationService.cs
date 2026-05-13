@@ -117,8 +117,8 @@ public class RouteCalculationService(
 
     private static bool IsBetterRoute(CalculatedRoute standard, CalculatedRoute timeMachine)
     {
-        var standardDeparture = standard.Segments.FirstOrDefault(s => s.Mode == TravelMode.Transit)?.DepartureTime;
-        var tmDeparture = timeMachine.Segments.FirstOrDefault(s => s.Mode == TravelMode.Transit)?.DepartureTime;
+        var standardDeparture = standard.Segments.FirstOrDefault(s => s.Mode == TravelMode.Transit)?.StartTime;
+        var tmDeparture = timeMachine.Segments.FirstOrDefault(s => s.Mode == TravelMode.Transit)?.StartTime;
 
         return tmDeparture < standardDeparture && timeMachine.TotalDuration < standard.TotalDuration;
     }

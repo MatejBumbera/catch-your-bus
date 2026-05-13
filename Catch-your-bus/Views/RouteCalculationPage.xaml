@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:Catch_your_bus.ViewModels"
     xmlns:places="clr-namespace:Catch_your_bus.Models.External.GooglePlaces"
+    xmlns:response="clr-namespace:Catch_your_bus.Models.External.GooglePlaces.Response"
     x:DataType="vm:RouteCalculationViewModel"
     Title="Route Calculator"
     BackgroundColor="#1A1A2E">
@@ -84,7 +85,7 @@
                         SelectionChanged="OnStartPredictionSelected"
                         HeightRequest="180">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="places:PlacePrediction">
+                            <DataTemplate x:DataType="response:PlacePrediction">
                                 <Border
                                     BackgroundColor="{StaticResource SurfaceLighter}"
                                     StrokeThickness="0"
@@ -123,7 +124,7 @@
                         SelectionChanged="OnEndPredictionSelected"
                         HeightRequest="180">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="places:PlacePrediction">
+                            <DataTemplate x:DataType="response:PlacePrediction">
                                 <Border
                                     BackgroundColor="{StaticResource SurfaceLighter}"
                                     StrokeThickness="0"

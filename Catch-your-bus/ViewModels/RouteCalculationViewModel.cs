@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Catch_your_bus.Models.Entities;
 using Catch_your_bus.Models.External.GooglePlaces;
+using Catch_your_bus.Models.External.GooglePlaces.Response;
 using Catch_your_bus.Models.Services;
 
 namespace Catch_your_bus.ViewModels;

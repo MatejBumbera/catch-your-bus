@@ -1,6 +1,7 @@
 using System.Globalization;
 using Catch_your_bus.Models.Entities;
 using Catch_your_bus.Models.External.GoogleRoutes;
+using Catch_your_bus.Models.External.GoogleRoutes.Response;
 
 namespace Catch_your_bus.Models.Services;
 
@@ -46,8 +47,8 @@ public static class GoogleRouteMapper
         {
             segment.DepartureStopName = details.StopDetails.DepartureStop?.Name;
             segment.ArrivalStopName = details.StopDetails.ArrivalStop?.Name;
-            segment.DepartureTime = details.StopDetails.DepartureTime;
-            segment.ArrivalTime = details.StopDetails.ArrivalTime;
+            segment.StartTime = details.StopDetails.DepartureTime;
+            segment.EndTime = details.StopDetails.ArrivalTime;
         }
 
         segment.NumberOfStops = details.StopCount;

@@ -25,49 +25,40 @@ public class RouteSegment
     public TravelMode Mode { get; set; }
 
     /// <summary>
-    /// Human-readable instruction for this segment (e.g. "Walk to Česká").
+    /// Human-readable instruction (e.g. "Walk to Česká" or "Take Tram 1").
     /// </summary>
     public string Instruction { get; set; } = string.Empty;
 
     public TimeSpan Duration { get; set; }
-    
     public double DistanceMeters { get; set; }
-
+    
+    public DateTimeOffset? StartTime { get; set; }
+    public DateTimeOffset? EndTime { get; set; }
+    
     /// <summary>
-    /// Name of the transit line (e.g. "Tram 1", "Bus 67").
-    /// Null if <see cref="Mode"/> is not <see cref="TravelMode.Transit"/>.
+    /// The time spent waiting at the stop *before* this segment begins.
     /// </summary>
+    public TimeSpan? WaitTimeAtDeparture { get; set; }
+    
     public string? TransitLineName { get; set; }
-
-    /// <summary>
-    /// Null if <see cref="Mode"/> is not <see cref="TravelMode.Transit"/>.
-    /// </summary>
     public VehicleType? TransitVehicleType { get; set; }
-
+    
     /// <summary>
-    /// Null if <see cref="Mode"/> is not <see cref="TravelMode.Transit"/>.
+    /// The direction the vehicle is traveling (e.g., "Sídliště Bystrc").
     /// </summary>
+    public string? Headsign { get; set; } 
+    
+    /// <summary>
+    /// Hex color code provided by the transit agency (e.g., "#FF0000").
+    /// </summary>
+    public string? LineColor { get; set; }
+    
+    /// <summary>
+    /// Hex color code for the text on top of the LineColor.
+    /// </summary>
+    public string? LineTextColor { get; set; } 
+
     public string? DepartureStopName { get; set; }
-
-    /// <summary>
-    /// Null if <see cref="Mode"/> is not <see cref="TravelMode.Transit"/>.
-    /// </summary>
     public string? ArrivalStopName { get; set; }
-
-    /// <summary>
-    /// Null if <see cref="Mode"/> is not <see cref="TravelMode.Transit"/>.
-    /// </summary>
     public int? NumberOfStops { get; set; }
-
-    /// <summary>
-    /// Scheduled departure time.
-    /// Null if <see cref="Mode"/> is not <see cref="TravelMode.Transit"/>.
-    /// </summary>
-    public DateTimeOffset? DepartureTime { get; set; }
-
-    /// <summary>
-    /// Scheduled arrival time.
-    /// Null if <see cref="Mode"/> is not <see cref="TravelMode.Transit"/>.
-    /// </summary>
-    public DateTimeOffset? ArrivalTime { get; set; }
 }
