@@ -7,106 +7,57 @@ public class RouteCalculationService(
     UserPreferencesService preferences) : IRouteCalculationService
 {
     private const double MinWalkingDistanceMeters = 50.0;
-    
-    public async Task<RouteComparisonResult?> CalculateRoutesAsync(double startLat, double startLng,
+
+    public async Task<RouteOptionsBundle> CalculateAllRoutesAsync(
+        double startLat, double startLng,
         double endLat, double endLng)
     {
-        var standardRoute = await googleRoutes.GetTransitRouteAsync(startLat, startLng, endLat, endLng);
+        var bundle = new RouteOptionsBundle();
+        var now = DateTimeOffset.UtcNow;
 
-        if (standardRoute is null)
+        var walkTask = googleRoutes.GetWalkingRouteAsync(startLat, startLng, endLat, endLng);
+        var transitTask = googleRoutes.GetTransitRouteAsync(startLat, startLng, endLat, endLng);
+
+        await Task.WhenAll(walkTask, transitTask);
+
+        bundle.StandardTransit = transitTask.Result;
+
+        if (walkTask.Result is not null)
         {
-            return null;
+            bundle.PureWalking = walkTask.Result;
+            AdjustFootRouteSpeeds(bundle.PureWalking, preferences.WalkingSpeedKmH, now, RouteType.PureWalking);
+
+            bundle.PureRunning = CreateRunningRoute(bundle.PureWalking, preferences.RunningSpeedKmH, now);
         }
 
-        var result = new RouteComparisonResult { StandardRoute = standardRoute };
+        var firstWalk = bundle.StandardTransit?.Segments.FirstOrDefault(s => s.Mode == TravelMode.Walking);
 
-        var firstWalk = standardRoute.Segments.FirstOrDefault(s => s.Mode == TravelMode.Walking);
-        if (firstWalk is null || firstWalk.DistanceMeters < MinWalkingDistanceMeters)
+        if (firstWalk is not null && firstWalk.DistanceMeters >= MinWalkingDistanceMeters)
         {
-            return result; 
-        }
+            var runningDuration = CalculateDuration(firstWalk.DistanceMeters, preferences.RunningSpeedKmH);
+            var timeSaved = firstWalk.Duration - runningDuration;
 
-        var runningDuration = CalculateDuration(firstWalk.DistanceMeters, preferences.RunningSpeedKmH);
-        var timeSaved = firstWalk.Duration - runningDuration;
-
-        if (timeSaved <= TimeSpan.Zero)
-        {
-            return result;
-        }
-
-        var timeMachineRoute = await googleRoutes.GetTransitRouteAsync(
-            startLat, startLng, endLat, endLng, DateTimeOffset.UtcNow - timeSaved);
-
-        if (timeMachineRoute is null || !IsBetterRoute(standardRoute, timeMachineRoute))
-        {
-            return result;
-        }
-
-        ChangeFirstWalkToRun(timeMachineRoute, runningDuration);
-        
-        result.RunningAlternative = timeMachineRoute;
-        result.TimeSaved = standardRoute.TotalDuration - timeMachineRoute.TotalDuration;
-
-        return result;
-    }
-
-    public async Task<CalculatedRoute?> GetPureFootModeRouteAsync(
-        double startLat, double startLng,
-        double endLat, double endLng,
-        bool running = false)
-    {
-        var walkRoute = await googleRoutes.GetWalkingRouteAsync(startLat, startLng, endLat, endLng);
-
-        if (walkRoute is null) 
-        {
-            return null;
-        }
-
-        var speedKmH = running ? preferences.RunningSpeedKmH : preferences.WalkingSpeedKmH;
-        
-        foreach (var segment in walkRoute.Segments.Where(s => s.Mode == TravelMode.Walking))
-        {
-            segment.Duration = CalculateDuration(segment.DistanceMeters, speedKmH);
-            if (running) 
+            if (timeSaved.TotalSeconds >= 5)
             {
-                segment.Mode = TravelMode.Running;
+                var timeMachineDeparture = now.Subtract(timeSaved);
+
+                var alternateRoute = await googleRoutes.GetTransitRouteAsync(
+                    startLat, startLng, endLat, endLng, timeMachineDeparture);
+
+                if (alternateRoute is not null)
+                {
+                    if (alternateRoute.ArrivalTime < bundle.StandardTransit?.ArrivalTime)
+                    {
+                        ChangeFirstWalkToRunAndFixTimeline(alternateRoute, runningDuration, now);
+                        bundle.RunningAlternative = alternateRoute;
+                    }
+                }
             }
         }
 
-        walkRoute.TotalDuration = CalculateDuration(walkRoute.TotalDistanceMeters, speedKmH);
-        walkRoute.Type = running ? RouteType.PureRunning : RouteType.PureWalking;
+        bundle.Winner = DetermineWinner(bundle);
 
-        return walkRoute;
-    }
-
-    public async Task<FastestModeResult?> CompareFastestModeAsync(
-        double startLat, double startLng,
-        double endLat, double endLng)
-    {
-        var transitTask = CalculateRoutesAsync(startLat, startLng, endLat, endLng);
-        var footTask = GetPureFootModeRouteAsync(startLat, startLng, endLat, endLng, running: true);
-
-        var transitResult = await transitTask;
-        var footRoute = await footTask;
-        
-        if (transitResult is null || footRoute is null) 
-        {
-            return null;
-        }
-        
-        var bestTransitRoute = transitResult.RunningAlternative ?? transitResult.StandardRoute;
-        
-        var winner = bestTransitRoute.TotalDuration <= footRoute.TotalDuration 
-            ? bestTransitRoute 
-            : footRoute;
-        
-        return new FastestModeResult
-        {
-            TransitRoute = bestTransitRoute,
-            FootRoute = footRoute,
-            Winner = winner,
-            Difference = (bestTransitRoute.TotalDuration - footRoute.TotalDuration).Duration()
-        };
+        return bundle;
     }
 
     private static TimeSpan CalculateDuration(double distanceMeters, double speedKmH)
@@ -115,25 +66,89 @@ public class RouteCalculationService(
         return TimeSpan.FromHours(hours);
     }
 
-    private static bool IsBetterRoute(CalculatedRoute standard, CalculatedRoute timeMachine)
+    private static void AdjustFootRouteSpeeds(CalculatedRoute route, double speedKmH, DateTimeOffset startTime,
+        RouteType type)
     {
-        var standardDeparture = standard.Segments.FirstOrDefault(s => s.Mode == TravelMode.Transit)?.StartTime;
-        var tmDeparture = timeMachine.Segments.FirstOrDefault(s => s.Mode == TravelMode.Transit)?.StartTime;
+        var currentTimeline = startTime;
 
-        return tmDeparture < standardDeparture && timeMachine.TotalDuration < standard.TotalDuration;
-    }
-
-    private static void ChangeFirstWalkToRun(CalculatedRoute route, TimeSpan runningDuration)
-    {
-        var firstWalk = route.Segments.FirstOrDefault(s => s.Mode == TravelMode.Walking);
-        if (firstWalk is null) 
+        foreach (var segment in route.Segments)
         {
-            return;
+            segment.Duration = CalculateDuration(segment.DistanceMeters, speedKmH);
+            segment.StartTime = currentTimeline;
+
+            currentTimeline += segment.Duration;
+            segment.EndTime = currentTimeline;
         }
 
-        route.TotalDuration = route.TotalDuration - firstWalk.Duration + runningDuration;
-        firstWalk.Duration = runningDuration;
+        route.DepartureTime = startTime;
+        route.ArrivalTime = currentTimeline;
+        route.TotalDuration = currentTimeline - startTime;
+        route.Type = type;
+    }
+
+    private static CalculatedRoute CreateRunningRoute(CalculatedRoute walkingRoute, double runSpeedKmH,
+        DateTimeOffset now)
+    {
+        var runningSegments = walkingRoute.Segments.Select(s => new RouteSegment
+        {
+            Mode = TravelMode.Running,
+            Instruction = "Run",
+            DistanceMeters = s.DistanceMeters
+        }).ToList();
+
+        var runRoute = new CalculatedRoute
+        {
+            TotalDistanceMeters = walkingRoute.TotalDistanceMeters,
+            Summary = "Run directly to destination",
+            Segments = runningSegments
+        };
+
+        AdjustFootRouteSpeeds(runRoute, runSpeedKmH, now, RouteType.PureRunning);
+        return runRoute;
+    }
+
+    private static void ChangeFirstWalkToRunAndFixTimeline(CalculatedRoute route, TimeSpan runningDuration,
+        DateTimeOffset now)
+    {
+        var firstWalk = route.Segments.FirstOrDefault();
+        if (firstWalk is null || firstWalk.Mode != TravelMode.Walking) return;
+        
         firstWalk.Mode = TravelMode.Running;
+        firstWalk.Instruction = "Run";
+        firstWalk.Duration = runningDuration;
+        firstWalk.StartTime = now;
+        firstWalk.EndTime = now.Add(runningDuration);
+        
+        if (route.Segments.Count > 1)
+        {
+            var nextSegment = route.Segments[1];
+            if (nextSegment.StartTime.HasValue)
+            {
+                var newWaitTime = nextSegment.StartTime.Value - firstWalk.EndTime.Value;
+                nextSegment.WaitTimeAtDeparture = newWaitTime > TimeSpan.Zero ? newWaitTime : TimeSpan.Zero;
+            }
+        }
+        
+        route.DepartureTime = now;
+        if (route.ArrivalTime.HasValue)
+        {
+            route.TotalDuration = route.ArrivalTime.Value - now;
+        }
+
         route.Type = RouteType.RunningAlternative;
+    }
+
+    private static CalculatedRoute? DetermineWinner(RouteOptionsBundle bundle)
+    {
+        var validRoutes = new List<CalculatedRoute>();
+        if (bundle.StandardTransit is not null) validRoutes.Add(bundle.StandardTransit);
+        if (bundle.RunningAlternative is not null) validRoutes.Add(bundle.RunningAlternative);
+        if (bundle.PureWalking is not null) validRoutes.Add(bundle.PureWalking);
+        if (bundle.PureRunning is not null) validRoutes.Add(bundle.PureRunning);
+
+        return validRoutes
+            .Where(r => r.ArrivalTime.HasValue)
+            .OrderBy(r => r.ArrivalTime!.Value)
+            .FirstOrDefault();
     }
 }
