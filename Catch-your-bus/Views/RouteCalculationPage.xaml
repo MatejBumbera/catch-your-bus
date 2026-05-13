@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:Catch_your_bus.ViewModels"
+    xmlns:places="clr-namespace:Catch_your_bus.Models.External.GooglePlaces"
     x:DataType="vm:RouteCalculationViewModel"
     Title="Route Calculator"
     BackgroundColor="#1A1A2E">
@@ -26,20 +27,19 @@
                 <Setter Property="StrokeShape" Value="RoundRectangle 16" />
             </Style>
 
-            <Style x:Key="InputEntry" TargetType="Entry">
-                <Setter Property="BackgroundColor" Value="{StaticResource SurfaceLighter}" />
-                <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
-                <Setter Property="PlaceholderColor" Value="{StaticResource TextSecondary}" />
-                <Setter Property="FontSize" Value="15" />
-                <Setter Property="Keyboard" Value="Numeric" />
-                <Setter Property="HeightRequest" Value="48" />
-            </Style>
-
             <Style x:Key="SectionLabel" TargetType="Label">
                 <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="FontAttributes" Value="Bold" />
                 <Setter Property="CharacterSpacing" Value="1.2" />
+            </Style>
+
+            <Style x:Key="SearchEntry" TargetType="Entry">
+                <Setter Property="BackgroundColor" Value="{StaticResource SurfaceLighter}" />
+                <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+                <Setter Property="PlaceholderColor" Value="{StaticResource TextSecondary}" />
+                <Setter Property="FontSize" Value="15" />
+                <Setter Property="HeightRequest" Value="48" />
             </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -48,7 +48,7 @@
         <VerticalStackLayout
             Padding="20"
             Spacing="16">
-            
+
             <Label
                 Text="🚌 Catch Your Bus!"
                 FontSize="28"
@@ -63,50 +63,82 @@
                 TextColor="{StaticResource TextSecondary}"
                 HorizontalTextAlignment="Center"
                 Margin="0,0,0,8" />
-            
+
             <Border Style="{StaticResource CardBorder}">
-                <VerticalStackLayout Spacing="10">
+                <VerticalStackLayout Spacing="8">
                     <Label
                         Style="{StaticResource SectionLabel}"
                         Text="START LOCATION" />
 
-                    <Grid ColumnDefinitions="*,12,*" RowDefinitions="Auto">
-                        <Entry
-                            Grid.Column="0"
-                            Style="{StaticResource InputEntry}"
-                            Placeholder="Latitude"
-                            Text="{Binding StartLat, Mode=TwoWay}"
-                            x:Name="StartLatEntry" />
-                        <Entry
-                            Grid.Column="2"
-                            Style="{StaticResource InputEntry}"
-                            Placeholder="Longitude"
-                            Text="{Binding StartLng, Mode=TwoWay}"
-                            x:Name="StartLngEntry" />
-                    </Grid>
+                    <Entry
+                        Style="{StaticResource SearchEntry}"
+                        Placeholder="Search for a place..."
+                        Text="{Binding StartQuery, Mode=TwoWay}"
+                        x:Name="StartEntry"
+                        TextChanged="OnStartTextChanged" />
+                    
+                    <CollectionView
+                        ItemsSource="{Binding StartPredictions}"
+                        IsVisible="{Binding HasStartPredictions}"
+                        SelectionMode="Single"
+                        SelectionChanged="OnStartPredictionSelected"
+                        HeightRequest="180">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="places:PlacePrediction">
+                                <Border
+                                    BackgroundColor="{StaticResource SurfaceLighter}"
+                                    StrokeThickness="0"
+                                    Padding="14,10"
+                                    Margin="0,2"
+                                    StrokeShape="RoundRectangle 8">
+                                    <Label
+                                        Text="{Binding DisplayText}"
+                                        TextColor="{StaticResource TextPrimary}"
+                                        FontSize="14"
+                                        LineBreakMode="TailTruncation" />
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                 </VerticalStackLayout>
             </Border>
             
             <Border Style="{StaticResource CardBorder}">
-                <VerticalStackLayout Spacing="10">
+                <VerticalStackLayout Spacing="8">
                     <Label
                         Style="{StaticResource SectionLabel}"
                         Text="DESTINATION" />
 
-                    <Grid ColumnDefinitions="*,12,*" RowDefinitions="Auto">
-                        <Entry
-                            Grid.Column="0"
-                            Style="{StaticResource InputEntry}"
-                            Placeholder="Latitude"
-                            Text="{Binding EndLat, Mode=TwoWay}"
-                            x:Name="EndLatEntry" />
-                        <Entry
-                            Grid.Column="2"
-                            Style="{StaticResource InputEntry}"
-                            Placeholder="Longitude"
-                            Text="{Binding EndLng, Mode=TwoWay}"
-                            x:Name="EndLngEntry" />
-                    </Grid>
+                    <Entry
+                        Style="{StaticResource SearchEntry}"
+                        Placeholder="Search for a place..."
+                        Text="{Binding EndQuery, Mode=TwoWay}"
+                        x:Name="EndEntry"
+                        TextChanged="OnEndTextChanged" />
+                    
+                    <CollectionView
+                        ItemsSource="{Binding EndPredictions}"
+                        IsVisible="{Binding HasEndPredictions}"
+                        SelectionMode="Single"
+                        SelectionChanged="OnEndPredictionSelected"
+                        HeightRequest="180">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="places:PlacePrediction">
+                                <Border
+                                    BackgroundColor="{StaticResource SurfaceLighter}"
+                                    StrokeThickness="0"
+                                    Padding="14,10"
+                                    Margin="0,2"
+                                    StrokeShape="RoundRectangle 8">
+                                    <Label
+                                        Text="{Binding DisplayText}"
+                                        TextColor="{StaticResource TextPrimary}"
+                                        FontSize="14"
+                                        LineBreakMode="TailTruncation" />
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                 </VerticalStackLayout>
             </Border>
             
@@ -121,14 +153,14 @@
                 HeightRequest="52"
                 Margin="0,4,0,0"
                 x:Name="CalculateButton" />
-            
+
             <ActivityIndicator
                 IsRunning="{Binding IsLoading}"
                 IsVisible="{Binding IsLoading}"
                 Color="{StaticResource PrimaryAccent}"
                 HeightRequest="40"
                 HorizontalOptions="Center" />
-            
+
             <Border
                 IsVisible="{Binding HasError}"
                 BackgroundColor="#3D1515"
@@ -142,7 +174,7 @@
                     FontSize="14"
                     HorizontalTextAlignment="Center" />
             </Border>
-            
+
             <Border
                 IsVisible="{Binding HasResult}"
                 Padding="24"
@@ -163,7 +195,7 @@
                         FontAttributes="Bold"
                         TextColor="White"
                         HorizontalTextAlignment="Center" />
-                    
+
                     <Label
                         Text="{Binding DifferenceText}"
                         FontSize="16"
@@ -187,13 +219,13 @@
                     </Border>
                 </VerticalStackLayout>
             </Border>
-            
+
             <Grid
                 IsVisible="{Binding HasResult}"
                 ColumnDefinitions="*,12,*"
                 RowDefinitions="Auto"
                 Margin="0,4,0,16">
-                
+
                 <Border
                     Grid.Column="0"
                     Style="{StaticResource CardBorder}">
@@ -220,7 +252,7 @@
                             LineBreakMode="WordWrap" />
                     </VerticalStackLayout>
                 </Border>
-                
+
                 <Border
                     Grid.Column="2"
                     Style="{StaticResource CardBorder}">

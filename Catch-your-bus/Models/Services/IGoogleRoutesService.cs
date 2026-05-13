@@ -2,6 +2,9 @@ using Catch_your_bus.Models.Entities;
 
 namespace Catch_your_bus.Models.Services;
 
+/// <summary>
+/// Api is documented at: https://developers.google.com/maps/documentation/routes/compute_route_directions
+/// </summary>
 public interface IGoogleRoutesService
 {
     /// <summary>

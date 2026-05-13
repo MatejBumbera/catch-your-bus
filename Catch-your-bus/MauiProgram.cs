@@ -25,13 +25,16 @@ public static class MauiProgram
             options.UseSqlite($"Data Source={dbPath}"));
 
         builder.Services.AddHttpClient<IGoogleRoutesService, GoogleRoutesService>(client =>
-            new GoogleRoutesService(client, Config.GoogleRoutesApiKey));
+            new GoogleRoutesService(client, Config.GoogleApiKey));
+        
+        builder.Services.AddHttpClient<IGooglePlacesService, GooglePlacesService>(client =>
+            new GooglePlacesService(client, Config.GoogleApiKey));
         
         builder.Services.AddSingleton<UserPreferencesService>();
         builder.Services.AddTransient<IRouteCalculationService, RouteCalculationService>();
-        
+
         builder.Services.AddTransient<RouteCalculationViewModel>();
-        
+
         builder.Services.AddTransient<RouteCalculationPage>();
 
 #if DEBUG

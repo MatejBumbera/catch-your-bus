@@ -1,24 +1,41 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Catch_your_bus.Models.Entities;
+using Catch_your_bus.Models.External.GooglePlaces;
 using Catch_your_bus.Models.Services;
 
 namespace Catch_your_bus.ViewModels;
 
 public partial class RouteCalculationViewModel(
-    IRouteCalculationService routeService) : ObservableObject
+    IRouteCalculationService routeService,
+    IGooglePlacesService placesService) : ObservableObject
 {
-    [ObservableProperty]
-    private double startLat;
+    private const int DebounceDelayMs = 500;
+    private const int MinQueryLength = 3;
+
+    private CancellationTokenSource? _startSearchCts;
+    private CancellationTokenSource? _endSearchCts;
+
+    // These flags prevent the Two-Way binding from triggering an infinite search loop
+    private bool _isSelectingStart;
+    private bool _isSelectingEnd;
+
+    [ObservableProperty] public partial string StartQuery { get; set; } = string.Empty;
+
+    [ObservableProperty] public partial string EndQuery { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private double startLng;
+    [NotifyPropertyChangedFor(nameof(HasStartPredictions))]
+    public partial ObservableCollection<PlacePrediction> StartPredictions { get; set; } = [];
 
     [ObservableProperty]
-    private double endLat;
+    [NotifyPropertyChangedFor(nameof(HasEndPredictions))]
+    public partial ObservableCollection<PlacePrediction> EndPredictions { get; set; } = [];
 
-    [ObservableProperty]
-    private double endLng;
+    [ObservableProperty] public partial PlaceLocation? SelectedStartLocation { get; set; }
+
+    [ObservableProperty] public partial PlaceLocation? SelectedEndLocation { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasResult))]
@@ -27,17 +44,17 @@ public partial class RouteCalculationViewModel(
     [NotifyPropertyChangedFor(nameof(IsRunningAlternative))]
     [NotifyPropertyChangedFor(nameof(TransitRouteSummary))]
     [NotifyPropertyChangedFor(nameof(FootRouteSummary))]
-    private FastestModeResult? currentResult;
+    public partial FastestModeResult? CurrentResult { get; set; }
 
-    [ObservableProperty]
-    private bool isLoading;
+    [ObservableProperty] public partial bool IsLoading { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
-    private string? errorMessage;
-    
-    public bool HasResult => CurrentResult is not null;
+    public partial string? ErrorMessage { get; set; }
 
+    public bool HasStartPredictions => StartPredictions.Count > 0;
+    public bool HasEndPredictions => EndPredictions.Count > 0;
+    public bool HasResult => CurrentResult is not null;
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
     public string WinnerText => CurrentResult?.Winner.Type switch
@@ -45,7 +62,7 @@ public partial class RouteCalculationViewModel(
         RouteType.PureRunning => "🏃 Just run there!",
         RouteType.PureWalking => "🚶 Just walk there!",
         RouteType.RunningAlternative => "🏃 Run to catch an earlier bus!",
-        RouteType.StandardTransit => "Take the transit route!",
+        RouteType.StandardTransit => "🚌 Take the transit route!",
         _ => string.Empty
     };
 
@@ -64,7 +81,111 @@ public partial class RouteCalculationViewModel(
 
     public string FootRouteSummary =>
         CurrentResult?.FootRoute.Summary ?? string.Empty;
-    
+
+    [RelayCommand]
+    private async Task SearchStartAsync(string query)
+    {
+        if (_isSelectingStart) return;
+
+        CancelAndDispose(ref _startSearchCts);
+
+        if (string.IsNullOrWhiteSpace(query) || query.Length < MinQueryLength)
+        {
+            StartPredictions = [];
+            return;
+        }
+
+        var cts = _startSearchCts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(DebounceDelayMs, cts.Token);
+
+            var predictions = await placesService.GetPredictionsAsync(query);
+            StartPredictions = new ObservableCollection<PlacePrediction>(predictions);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected — user kept typing
+        }
+        catch (Exception)
+        {
+            StartPredictions = [];
+            ErrorMessage = "Could not get start location";
+        }
+    }
+
+    [RelayCommand]
+    private async Task SelectStartAsync(PlacePrediction prediction)
+    {
+        _isSelectingStart = true;
+        StartQuery = prediction.DisplayText;
+        StartPredictions = [];
+        _isSelectingStart = false;
+
+        try
+        {
+            var location = await placesService.GetPlaceCoordinatesAsync(prediction.PlaceId);
+            SelectedStartLocation = location;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "Could not resolve origin location.";
+        }
+    }
+
+    [RelayCommand]
+    private async Task SearchEndAsync(string query)
+    {
+        if (_isSelectingEnd) return;
+
+        CancelAndDispose(ref _endSearchCts);
+
+        if (string.IsNullOrWhiteSpace(query) || query.Length < MinQueryLength)
+        {
+            EndPredictions = [];
+            return;
+        }
+
+        var cts = _endSearchCts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(DebounceDelayMs, cts.Token);
+
+            var predictions = await placesService.GetPredictionsAsync(query);
+            EndPredictions = new ObservableCollection<PlacePrediction>(predictions);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected
+        }
+        catch (Exception)
+        {
+            EndPredictions = [];
+            ErrorMessage = "Could not get end location";
+        }
+    }
+
+    [RelayCommand]
+    private async Task SelectEndAsync(PlacePrediction prediction)
+    {
+        _isSelectingEnd = true;
+        EndQuery = prediction.DisplayText;
+        EndPredictions = [];
+        _isSelectingEnd = false;
+
+        try
+        {
+            var location = await placesService.GetPlaceCoordinatesAsync(prediction.PlaceId);
+            SelectedEndLocation = location;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "Could not resolve destination location.";
+        }
+    }
+
     [RelayCommand]
     private async Task CalculateBestRouteAsync()
     {
@@ -74,8 +195,15 @@ public partial class RouteCalculationViewModel(
 
         try
         {
+            if (SelectedStartLocation is null || SelectedEndLocation is null)
+            {
+                ErrorMessage = "Please select valid locations from the dropdown.";
+                return;
+            }
+
             var result = await routeService.CompareFastestModeAsync(
-                StartLat, StartLng, EndLat, EndLng);
+                SelectedStartLocation.Latitude, SelectedStartLocation.Longitude,
+                SelectedEndLocation.Latitude, SelectedEndLocation.Longitude);
 
             if (result is null)
             {
@@ -87,7 +215,7 @@ public partial class RouteCalculationViewModel(
         }
         catch (HttpRequestException)
         {
-            ErrorMessage = "Network error — please check your connection and try again.";
+            ErrorMessage = "Network error — please check your connection.";
         }
         catch (Exception)
         {
@@ -96,6 +224,23 @@ public partial class RouteCalculationViewModel(
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    private static void CancelAndDispose(ref CancellationTokenSource? cts)
+    {
+        if (cts is null) return;
+        try
+        {
+            cts.Cancel();
+            cts.Dispose();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+        finally
+        {
+            cts = null;
         }
     }
 
