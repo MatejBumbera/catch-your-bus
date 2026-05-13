@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Net.Http.Json;
 using Catch_your_bus.Models.Entities;
-using Catch_your_bus.Models.External.GoogleRoutes;
 using Catch_your_bus.Models.External.GoogleRoutes.Request;
 using Catch_your_bus.Models.External.GoogleRoutes.Response;
 
@@ -21,6 +20,7 @@ public class GoogleRoutesService(HttpClient httpClient, string apiKey) : IGoogle
         "routes.legs.steps.navigationInstruction," +
         "routes.legs.steps.transitDetails.stopDetails," +
         "routes.legs.steps.transitDetails.transitLine," +
+        "routes.legs.steps.transitDetails.headsign," +
         "routes.legs.steps.transitDetails.stopCount";
 
     private const string WalkFieldMask =
@@ -39,7 +39,13 @@ public class GoogleRoutesService(HttpClient httpClient, string apiKey) : IGoogle
         var requestBody = BuildRequestBody(startLat, startLng, endLat, endLng, "TRANSIT", departureTime);
         var apiResponse = await SendRequestAsync(requestBody, TransitFieldMask);
 
-        var route = GoogleRouteMapper.MapToCalculatedRoute(apiResponse);
+        // If the query was for a time in the past, the user actually leaves NOW.
+        var now = DateTimeOffset.UtcNow;
+        var actualRouteStartTime = (departureTime.HasValue && departureTime.Value > now)
+            ? departureTime.Value
+            : now;
+
+        var route = GoogleRouteMapper.MapToCalculatedRoute(apiResponse, actualRouteStartTime);
         route?.Type = RouteType.StandardTransit;
 
         return route;
@@ -52,7 +58,7 @@ public class GoogleRoutesService(HttpClient httpClient, string apiKey) : IGoogle
         var requestBody = BuildRequestBody(startLat, startLng, endLat, endLng, "WALK");
         var apiResponse = await SendRequestAsync(requestBody, WalkFieldMask);
 
-        var route = GoogleRouteMapper.MapToCalculatedRoute(apiResponse);
+        var route = GoogleRouteMapper.MapToCalculatedRoute(apiResponse, DateTimeOffset.UtcNow);
         route?.Type = RouteType.PureWalking;
 
         return route;
