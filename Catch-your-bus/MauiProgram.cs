@@ -42,6 +42,10 @@ public static class MauiProgram
         
         builder.Services.AddTransient<RouteDetailsViewModel>();
         builder.Services.AddTransient<RouteDetailsPage>();
+        
+        builder.Services.AddTransient<CalibrationService>();
+        builder.Services.AddTransient<ProfileViewModel>();
+        builder.Services.AddTransient<ProfilePage>();
 
 #if DEBUG
         builder.Logging.AddDebug();
