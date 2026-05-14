@@ -40,7 +40,7 @@ public class GoogleRoutesService(HttpClient httpClient, string apiKey) : IGoogle
         var apiResponse = await SendRequestAsync(requestBody, TransitFieldMask);
 
         // If the query was for a time in the past, the user actually leaves NOW.
-        var now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.Now;
         var actualRouteStartTime = (departureTime.HasValue && departureTime.Value > now)
             ? departureTime.Value
             : now;
@@ -58,7 +58,7 @@ public class GoogleRoutesService(HttpClient httpClient, string apiKey) : IGoogle
         var requestBody = BuildRequestBody(startLat, startLng, endLat, endLng, "WALK");
         var apiResponse = await SendRequestAsync(requestBody, WalkFieldMask);
 
-        var route = GoogleRouteMapper.MapToCalculatedRoute(apiResponse, DateTimeOffset.UtcNow);
+        var route = GoogleRouteMapper.MapToCalculatedRoute(apiResponse, DateTimeOffset.Now);
         route?.Type = RouteType.PureWalking;
 
         return route;
@@ -95,7 +95,7 @@ public class GoogleRoutesService(HttpClient httpClient, string apiKey) : IGoogle
                 Location = new GoogleLocation { LatLng = new GoogleLatLng { Latitude = endLat, Longitude = endLng } }
             },
             TravelMode = travelMode,
-            DepartureTime = departureTime?.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture)
+            DepartureTime = departureTime?.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture)
         };
     }
 }

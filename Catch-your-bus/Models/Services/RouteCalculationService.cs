@@ -13,7 +13,7 @@ public class RouteCalculationService(
         double endLat, double endLng)
     {
         var bundle = new RouteOptionsBundle();
-        var now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.Now;
 
         var walkTask = googleRoutes.GetWalkingRouteAsync(startLat, startLng, endLat, endLng);
         var transitTask = googleRoutes.GetTransitRouteAsync(startLat, startLng, endLat, endLng);

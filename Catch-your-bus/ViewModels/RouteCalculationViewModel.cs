@@ -131,7 +131,7 @@ public partial class RouteCalculationViewModel(
             var firstSegment = CurrentBundle?.StandardTransit?.Segments.FirstOrDefault();
             if (firstSegment?.StartTime is null) return string.Empty;
 
-            var timeUntilStart = firstSegment.StartTime.Value - DateTimeOffset.UtcNow;
+            var timeUntilStart = firstSegment.StartTime.Value - DateTimeOffset.Now;
 
             return timeUntilStart.TotalMinutes switch
             {
