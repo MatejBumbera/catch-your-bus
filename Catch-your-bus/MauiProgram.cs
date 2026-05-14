@@ -32,20 +32,26 @@ public static class MauiProgram
         builder.Services.AddHttpClient<IGooglePlacesService, GooglePlacesService>(client =>
             new GooglePlacesService(client, Config.GoogleApiKey));
         
+        builder.Services.AddSingleton<ActiveTrackingState>();
+        
         builder.Services.AddSingleton<UserPreferencesService>();
         builder.Services.AddTransient<FavoriteRoutesService>();
         builder.Services.AddTransient<IRouteCalculationService, RouteCalculationService>();
+        builder.Services.AddTransient<RunSessionService>();
+        builder.Services.AddTransient<CalibrationService>();
+        builder.Services.AddTransient<TrackingService>();
 
         builder.Services.AddTransient<RouteCalculationViewModel>();
-
         builder.Services.AddTransient<RouteCalculationPage>();
         
         builder.Services.AddTransient<RouteDetailsViewModel>();
         builder.Services.AddTransient<RouteDetailsPage>();
-        
-        builder.Services.AddTransient<CalibrationService>();
+
         builder.Services.AddTransient<ProfileViewModel>();
         builder.Services.AddTransient<ProfilePage>();
+        
+        builder.Services.AddTransient<TrackingViewModel>();
+        builder.Services.AddTransient<TrackingPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

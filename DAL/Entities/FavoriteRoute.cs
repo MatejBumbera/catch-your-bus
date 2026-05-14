@@ -8,7 +8,6 @@ namespace DAL.Entities;
 /// </summary>
 public class FavoriteRoute
 {
-    [Key]
     public int Id { get; set; }
 
     /// <summary>

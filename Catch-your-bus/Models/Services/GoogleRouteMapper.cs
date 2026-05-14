@@ -1,5 +1,6 @@
 using System.Globalization;
 using Catch_your_bus.Models.Entities;
+using Catch_your_bus.Models.External.GoogleRoutes;
 using Catch_your_bus.Models.External.GoogleRoutes.Response;
 
 namespace Catch_your_bus.Models.Services;
@@ -38,7 +39,7 @@ public static class GoogleRouteMapper
         var segments = new List<RouteSegment>();
         RouteSegment? pendingWalk = null;
         var currentTimeline = routeStartTime;
-        
+
         foreach (var step in allSteps)
         {
             var isWalk = step.TravelMode == GoogleRouteTravelMode.WALK;
@@ -53,13 +54,15 @@ public static class GoogleRouteMapper
                     Instruction = "Walk",
                     StartTime = currentTimeline,
                     Duration = TimeSpan.Zero,
-                    DistanceMeters = 0
+                    DistanceMeters = 0,
+                    StartLocation = MapLocation(step.StartLocation?.LatLng)
                 };
 
                 pendingWalk.Duration += stepDuration;
                 pendingWalk.DistanceMeters += stepDistance;
                 currentTimeline += stepDuration;
                 pendingWalk.EndTime = currentTimeline;
+                pendingWalk.EndLocation = MapLocation(step.EndLocation?.LatLng);
             }
             else
             {
@@ -70,12 +73,12 @@ public static class GoogleRouteMapper
                 }
 
                 var transitSegment = MapTransitStep(step);
-                
+
                 if (transitSegment.StartTime.HasValue)
                 {
                     var waitTime = transitSegment.StartTime.Value - currentTimeline;
                     transitSegment.WaitTimeAtDeparture = waitTime > TimeSpan.Zero ? waitTime : TimeSpan.Zero;
-                    
+
                     currentTimeline = transitSegment.EndTime ?? (transitSegment.StartTime.Value + transitSegment.Duration);
                 }
                 else
@@ -88,7 +91,7 @@ public static class GoogleRouteMapper
                 segments.Add(transitSegment);
             }
         }
-        
+
         if (pendingWalk is not null)
         {
             segments.Add(pendingWalk);
@@ -104,9 +107,11 @@ public static class GoogleRouteMapper
             Mode = TravelMode.Transit,
             Duration = ParseProtobufDuration(step.StaticDuration),
             DistanceMeters = step.DistanceMeters ?? 0,
-            Instruction = step.NavigationInstruction?.Instructions ?? string.Empty
+            Instruction = step.NavigationInstruction?.Instructions ?? string.Empty,
+            StartLocation = MapLocation(step.StartLocation?.LatLng),
+            EndLocation = MapLocation(step.EndLocation?.LatLng)
         };
-
+        
         var details = step.TransitDetails;
         if (details is null) return segment;
 
@@ -149,6 +154,9 @@ public static class GoogleRouteMapper
         !string.IsNullOrEmpty(raw) && double.TryParse(raw.TrimEnd('s'), CultureInfo.InvariantCulture, out var seconds)
             ? TimeSpan.FromSeconds(seconds)
             : TimeSpan.Zero;
+    
+    private static Location? MapLocation(GoogleLatLng? latLng) =>
+        latLng is not null ? new Location(latLng.Latitude, latLng.Longitude) : null;
 
     /// <summary>
     /// Builds a human-readable summary like "Walk → Tram 1 → Walk → Bus 67".

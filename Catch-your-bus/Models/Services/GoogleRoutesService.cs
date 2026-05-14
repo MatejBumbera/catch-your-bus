@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net.Http.Json;
 using Catch_your_bus.Models.Entities;
+using Catch_your_bus.Models.External.GoogleRoutes;
 using Catch_your_bus.Models.External.GoogleRoutes.Request;
 using Catch_your_bus.Models.External.GoogleRoutes.Response;
 
@@ -18,6 +19,8 @@ public class GoogleRoutesService(HttpClient httpClient, string apiKey) : IGoogle
         "routes.legs.steps.staticDuration," +
         "routes.legs.steps.distanceMeters," +
         "routes.legs.steps.navigationInstruction," +
+        "routes.legs.steps.startLocation," +
+        "routes.legs.steps.endLocation," +
         "routes.legs.steps.transitDetails.stopDetails," +
         "routes.legs.steps.transitDetails.transitLine," +
         "routes.legs.steps.transitDetails.headsign," +

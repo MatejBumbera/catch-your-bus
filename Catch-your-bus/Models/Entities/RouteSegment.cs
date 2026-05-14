@@ -35,6 +35,9 @@ public class RouteSegment
     public DateTimeOffset? StartTime { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     
+    public Location? StartLocation { get; set; }
+    public Location? EndLocation { get; set; }
+    
     /// <summary>
     /// The time spent waiting at the stop *before* this segment begins.
     /// </summary>

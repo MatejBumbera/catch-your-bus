@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Catch_your_bus.Views.TrackingPage"
+             xmlns:vm="clr-namespace:Catch_your_bus.ViewModels"
+             x:DataType="vm:TrackingViewModel"
+             Shell.NavBarIsVisible="False"
+             Title="Live Tracking">
+
+    <Grid BackgroundColor="{Binding BackgroundColor}" Padding="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <VerticalStackLayout Grid.Row="0" HorizontalOptions="Center" Margin="0,40,0,0">
+            <Label Text="Heading to"
+                   TextColor="White"
+                   FontSize="18"
+                   HorizontalOptions="Center"
+                   Opacity="0.8" />
+            <Label Text="{Binding TargetBusStop}"
+                   TextColor="White"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Grid.Row="1" VerticalOptions="Center" Spacing="10">
+            <Label Text="{Binding CountdownText}"
+                   TextColor="White"
+                   FontSize="80"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+
+            <Label Text="{Binding DistanceText}"
+                   TextColor="White"
+                   FontSize="24"
+                   HorizontalOptions="Center" />
+
+            <Label Text="{Binding SpeedText}"
+                   TextColor="White"
+                   FontSize="20"
+                   HorizontalOptions="Center"
+                   Opacity="0.9" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Grid.Row="2" Spacing="15" Margin="0,0,0,30">
+            <Button Text="I Made It!"
+                    Command="{Binding MadeItCommand}"
+                    BackgroundColor="#40000000"
+                    TextColor="White"
+                    FontSize="20"
+                    CornerRadius="12"
+                    HeightRequest="60" />
+
+            <Button Text="Didn't catch the bus :("
+                    Command="{Binding MissedItCommand}"
+                    BackgroundColor="#40000000"
+                    TextColor="White"
+                    FontSize="18"
+                    CornerRadius="12"
+                    HeightRequest="50" />
+
+            <Button Text="Cancel / Give Up"
+                    Command="{Binding CancelCommand}"
+                    BackgroundColor="Transparent"
+                    TextColor="White"
+                    FontSize="16" />
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>
