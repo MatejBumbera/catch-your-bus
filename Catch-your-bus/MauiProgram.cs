@@ -34,6 +34,7 @@ public static class MauiProgram
             new GooglePlacesService(client, Config.GoogleApiKey));
         
         builder.Services.AddSingleton<ActiveTrackingState>();
+        builder.Services.AddSingleton<ActiveRouteDetailsState>();
         
         builder.Services.AddSingleton<UserPreferencesService>();
         builder.Services.AddTransient<FavoriteRoutesService>();

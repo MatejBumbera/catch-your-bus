@@ -1,20 +1,19 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Catch_your_bus.Models.Entities;
-using Catch_your_bus.Models.Services;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Catch_your_bus.ViewModels;
 
-[QueryProperty(nameof(Route), "SelectedRoute")]
-[QueryProperty(nameof(StandardArrivalTime), "StandardArrivalTime")]
-public partial class RouteDetailsViewModel(ActiveTrackingState trackingState) : ObservableObject
+public partial class RouteDetailsViewModel(ActiveTrackingState trackingState, ActiveRouteDetailsState routeDetailsState)
+    : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanStartLiveTracking))]
-    public partial CalculatedRoute? Route { get; set; }
-    
-    [ObservableProperty] 
-    public partial DateTime? StandardArrivalTime { get; set; }
+    public partial CalculatedRoute? Route { get; set; } = routeDetailsState.Route;
+
+    [ObservableProperty]
+    public partial DateTime? StandardArrivalTime { get; set; } =
+        routeDetailsState.StandardRouteArrivalTime?.DateTime;
     
     public bool CanStartLiveTracking => 
         Route?.Type is RouteType.StandardTransit or RouteType.RunningAlternative;

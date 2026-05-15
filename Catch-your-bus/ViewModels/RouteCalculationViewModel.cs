@@ -18,7 +18,8 @@ public enum TravelTab
 public partial class RouteCalculationViewModel(
     IRouteCalculationService routeService,
     IGooglePlacesService placesService,
-    FavoriteRoutesService favoritesService) : ObservableObject
+    FavoriteRoutesService favoritesService,
+    ActiveRouteDetailsState routeDetailsState) : ObservableObject
 {
     private const int DebounceDelayMs = 500;
     private const int MinQueryLength = 3;
@@ -245,13 +246,10 @@ public partial class RouteCalculationViewModel(
     {
         if (selectedRoute is null) return;
         
-        var navigationParameter = new Dictionary<string, object?>
-        {
-            { "SelectedRoute", selectedRoute },
-            { "StandardArrivalTime", CurrentBundle?.StandardTransit?.ArrivalTime }
-        };
+        routeDetailsState.Route = selectedRoute;
+        routeDetailsState.StandardRouteArrivalTime = CurrentBundle?.StandardTransit?.ArrivalTime;
         
-        await Shell.Current.GoToAsync("RouteDetailsPage", navigationParameter);
+        await Shell.Current.GoToAsync("RouteDetailsPage");
     }
 
     [RelayCommand]
