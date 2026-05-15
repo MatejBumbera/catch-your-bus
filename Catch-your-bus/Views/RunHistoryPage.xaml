@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Catch_your_bus.ViewModels"
+             xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+             x:Class="Catch_your_bus.Views.RunHistoryPage"
+             x:DataType="vm:RunHistoryViewModel"
+             Title="My Stats"
+             BackgroundColor="#1A1A2E">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Clear" Command="{Binding ClearHistoryCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto, Auto, *">
+
+        <Border Grid.Row="0" Margin="15,15,15,10" Padding="15" BackgroundColor="#16213E" StrokeThickness="0"
+                StrokeShape="RoundRectangle 12">
+            <Grid ColumnDefinitions="*,*,*">
+                <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
+                    <Label Text="🔥 Calories" FontSize="12" TextColor="#A0A0B0" />
+                    <Label Text="{Binding TotalCalories, StringFormat='{0:F0}'}" FontSize="22" FontAttributes="Bold"
+                           TextColor="White" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+                    <Label Text="👟 Distance" FontSize="12" TextColor="#A0A0B0" />
+                    <Label Text="{Binding TotalDistanceKm, StringFormat='{0:F2} km'}" FontSize="22"
+                           FontAttributes="Bold" TextColor="White" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center">
+                    <Label Text="⏱️ Saved" FontSize="12" TextColor="#A0A0B0" />
+                    <Label Text="{Binding TotalTimeSavedMinutes, StringFormat='{0} min'}" FontSize="22"
+                           FontAttributes="Bold" TextColor="#6C63FF" />
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+
+        <HorizontalStackLayout Grid.Row="1" Spacing="10" Margin="15,0,15,15" HorizontalOptions="Center">
+            <Button Text="All" Command="{Binding FilterRunsCommand}" CommandParameter="{x:Static vm:RunFilter.All}"
+                    BackgroundColor="#2A2A40" TextColor="White" CornerRadius="8" HeightRequest="40" Padding="20,0" />
+            <Button Text="Caught" Command="{Binding FilterRunsCommand}" CommandParameter="{x:Static vm:RunFilter.Caught}"
+                    BackgroundColor="#204030" TextColor="#4ECDC4" CornerRadius="8" HeightRequest="40" Padding="20,0" />
+            <Button Text="Missed" Command="{Binding FilterRunsCommand}" CommandParameter="{x:Static vm:RunFilter.Missed}"
+                    BackgroundColor="#402020" TextColor="#FF6B6B" CornerRadius="8" HeightRequest="40" Padding="20,0" />
+        </HorizontalStackLayout>
+
+        <RefreshView Grid.Row="2" Command="{Binding LoadHistoryCommand}" IsRefreshing="{Binding IsLoading}">
+            <CollectionView ItemsSource="{Binding DisplayedRuns}" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <Label Text="No runs recorded yet. Get moving!"
+                           HorizontalOptions="Center" VerticalOptions="Center"
+                           TextColor="#A0A0B0" Margin="0,50,0,0" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="entities:RunSession">
+                        <Grid Margin="15,0,15,15">
+                            <Border BackgroundColor="#16213E" StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                                    Padding="15">
+                                <Grid ColumnDefinitions="50, *, Auto" RowDefinitions="Auto, Auto">
+
+                                    <BoxView Grid.RowSpan="2" Grid.Column="0"
+                                             WidthRequest="40" HeightRequest="40" CornerRadius="20"
+                                             HorizontalOptions="Start" VerticalOptions="Center">
+                                        <BoxView.Triggers>
+                                            <DataTrigger TargetType="BoxView" Binding="{Binding Success}" Value="True">
+                                                <Setter Property="BackgroundColor" Value="#4ECDC4" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="BoxView" Binding="{Binding Success}" Value="False">
+                                                <Setter Property="BackgroundColor" Value="#FF6B6B" />
+                                            </DataTrigger>
+                                        </BoxView.Triggers>
+                                    </BoxView>
+
+                                    <VerticalStackLayout Grid.Column="1" Grid.Row="0" VerticalOptions="Center">
+                                        <HorizontalStackLayout Spacing="5">
+                                            <Label Text="{Binding TargetBusStop}" FontSize="16" FontAttributes="Bold"
+                                                   TextColor="White" LineBreakMode="TailTruncation" />
+                                            <Label Text="🏆 PB" FontSize="12" TextColor="#FFD166" FontAttributes="Bold"
+                                                   VerticalOptions="Center" IsVisible="{Binding IsPersonalBest}" />
+                                        </HorizontalStackLayout>
+                                        <Label Text="{Binding Date, StringFormat='{0:MMM dd, yyyy - HH:mm}'}"
+                                               FontSize="12" TextColor="#A0A0B0" />
+                                    </VerticalStackLayout>
+
+                                    <VerticalStackLayout Grid.Column="2" Grid.Row="0" HorizontalOptions="End"
+                                                         VerticalOptions="Center">
+                                        <Label Text="{Binding CaloriesBurned, StringFormat='{0:F0} kcal'}"
+                                               FontSize="14" TextColor="White" FontAttributes="Bold"
+                                               HorizontalTextAlignment="End" />
+                                        <Label Text="{Binding DistanceMeters, StringFormat='{0:F0} m'}" FontSize="12"
+                                               TextColor="#A0A0B0" HorizontalTextAlignment="End" />
+                                    </VerticalStackLayout>
+
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

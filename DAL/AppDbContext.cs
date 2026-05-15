@@ -33,6 +33,10 @@ public sealed class AppDbContext : DbContext
             entity.Property(e => e.Success).IsRequired();
             entity.Property(e => e.DistanceMeters).IsRequired();
             entity.Property(e => e.DurationSeconds).IsRequired();
+            entity.Property(e => e.CaloriesBurned).IsRequired();
+            entity.Property(e => e.TimeSavedSeconds).IsRequired();
+            entity.Property(e => e.RouteIdentifier).HasMaxLength(200);
+            entity.Property(e => e.RouteJson).IsRequired();
         });
     }
 }

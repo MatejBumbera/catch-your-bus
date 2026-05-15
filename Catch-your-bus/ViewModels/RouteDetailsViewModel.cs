@@ -6,11 +6,15 @@ using CommunityToolkit.Mvvm.Input;
 namespace Catch_your_bus.ViewModels;
 
 [QueryProperty(nameof(Route), "SelectedRoute")]
+[QueryProperty(nameof(StandardArrivalTime), "StandardArrivalTime")]
 public partial class RouteDetailsViewModel(ActiveTrackingState trackingState) : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanStartLiveTracking))]
     public partial CalculatedRoute? Route { get; set; }
+    
+    [ObservableProperty] 
+    public partial DateTime? StandardArrivalTime { get; set; }
     
     public bool CanStartLiveTracking => 
         Route?.Type is RouteType.StandardTransit or RouteType.RunningAlternative;
@@ -36,6 +40,8 @@ public partial class RouteDetailsViewModel(ActiveTrackingState trackingState) : 
         trackingState.TargetBusStop = firstTransitSegment.DepartureStopName ?? "Next Stop";
         trackingState.DepartureTime = departureTime.Value;
         trackingState.DestinationLocation = departureLocation;
+        trackingState.FullRoute = Route;
+        trackingState.StandardRouteArrivalTime = StandardArrivalTime;
 
         await Shell.Current.GoToAsync(nameof(Views.TrackingPage));
     }

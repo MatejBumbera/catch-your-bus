@@ -1,3 +1,4 @@
+using Catch_your_bus.Models.Entities;
 using Catch_your_bus.Models.Services;
 using Catch_your_bus.ViewModels;
 using Catch_your_bus.Views;
@@ -52,6 +53,9 @@ public static class MauiProgram
         
         builder.Services.AddTransient<TrackingViewModel>();
         builder.Services.AddTransient<TrackingPage>();
+        
+        builder.Services.AddTransient<RunHistoryViewModel>();
+        builder.Services.AddTransient<RunHistoryPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

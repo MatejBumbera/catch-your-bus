@@ -11,6 +11,9 @@
         <Tab Title="Calculator" Icon="search.svg">
             <ShellContent ContentTemplate="{DataTemplate views:RouteCalculationPage}" Route="RouteCalculationPage" />
         </Tab>
+        <Tab Title="History" Icon="history.svg">
+            <ShellContent ContentTemplate="{DataTemplate views:RunHistoryPage}" />
+        </Tab>
         <Tab Title="Profile" Icon="settings.svg">
             <ShellContent ContentTemplate="{DataTemplate views:ProfilePage}" Route="ProfilePage" />
         </Tab>

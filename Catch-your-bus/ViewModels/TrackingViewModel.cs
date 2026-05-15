@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Catch_your_bus.Models.Entities;
 using Catch_your_bus.Models.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -132,19 +133,62 @@ public partial class TrackingViewModel(
         IsTracking = false;
         _countdownTimer?.Stop();
 
-        var totalDuration = (int)(DateTime.Now - _startTime).TotalSeconds;
+        var totalDurationSeconds = (int)(DateTime.Now - _startTime).TotalSeconds;
+        if (totalDurationSeconds <= 0)
+        {
+            totalDurationSeconds = 1;
+        } 
+
+        var speedKmH = (_finalDistanceMeters / 1000.0) / (totalDurationSeconds / 3600.0);
+
+        var metValue = speedKmH switch
+        {
+            < 6.0 => 3.5, 
+            < 9.0 => 7.0,  
+            < 12.0 => 10.0,
+            _ => 11.5      
+        };
+
+        const double weightKg = 70.0; 
+        var caloriesBurned = metValue * weightKg * (totalDurationSeconds / 3600.0);
+
+        var timeSavedSeconds = 0;
+        
+        if (success && 
+            trackingState.FullRoute?.Type == RouteType.RunningAlternative && 
+            trackingState.StandardRouteArrivalTime.HasValue && 
+            trackingState.FullRoute.ArrivalTime.HasValue)
+        {
+            var timeDifference = trackingState.StandardRouteArrivalTime.Value - trackingState.FullRoute.ArrivalTime.Value;
+            timeSavedSeconds = (int)Math.Max(0, timeDifference.TotalSeconds);
+        }
+        
+        var routeJsonString = trackingState.FullRoute != null 
+            ? JsonSerializer.Serialize(trackingState.FullRoute) 
+            : null;
 
         var session = new RunSession
         {
             Date = DateTime.Now,
             TargetBusStop = TargetBusStop,
+            RouteIdentifier = TargetBusStop, 
+            RouteJson = routeJsonString, 
             Success = success,
-            DurationSeconds = totalDuration,
-            DistanceMeters = _finalDistanceMeters
+            DurationSeconds = totalDurationSeconds,
+            DistanceMeters = _finalDistanceMeters,
+            CaloriesBurned = Math.Round(caloriesBurned, 1),
+            TimeSavedSeconds = timeSavedSeconds
         };
 
-        await runSessionService.AddSessionAsync(session);
-
+        try
+        {
+            await runSessionService.AddSessionAsync(session);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"DB Save Failed: {ex.Message}");
+        }
+        
         await Shell.Current.GoToAsync("..");
     }
 }

@@ -245,9 +245,10 @@ public partial class RouteCalculationViewModel(
     {
         if (selectedRoute is null) return;
         
-        var navigationParameter = new Dictionary<string, object>
+        var navigationParameter = new Dictionary<string, object?>
         {
-            { "SelectedRoute", selectedRoute }
+            { "SelectedRoute", selectedRoute },
+            { "StandardArrivalTime", CurrentBundle?.StandardTransit?.ArrivalTime }
         };
         
         await Shell.Current.GoToAsync("RouteDetailsPage", navigationParameter);
