@@ -1,0 +1,25 @@
+# Build output
+bin/
+obj/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local secrets: copy Config.example.cs to Config.cs and add your API key
+Catch-your-bus/Config.cs
+
+# Local databases
+*.db3
+*.db
+
+# Claude Code local settings
+.claude/
