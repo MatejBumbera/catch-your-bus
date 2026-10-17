@@ -18,18 +18,18 @@ public class CalibrationService
         
         var initialLocation = await GetAccurateLocationAsync(TimeSpan.FromSeconds(4));
         
-        if (initialLocation == null) 
+        if (initialLocation == null)
         {
-            System.Diagnostics.Debug.WriteLine("Failed to get initial GPS anchor.");
+            Debug.WriteLine("Failed to get initial GPS anchor.");
             return false;
         }
 
         _totalDistanceKm = 0;
-        _lastLocation = null;
+        _lastLocation = initialLocation;
         _startTime = DateTimeOffset.UtcNow;
         _isTracking = true;
-        
-        System.Diagnostics.Debug.WriteLine("Initial GPS Anchor set successfully.");
+
+        Debug.WriteLine("Initial GPS Anchor set successfully.");
 
         _ = TrackLocationLoopAsync();
 
@@ -41,22 +41,18 @@ public class CalibrationService
         while (_isTracking)
         {
             await Task.Delay(2000);
-            
+
             if (!_isTracking) break;
             var newLocation = await GetAccurateLocationAsync(TimeSpan.FromSeconds(2));
+            if (newLocation == null || _lastLocation == null) continue;
 
-                if (newLocation != null && _lastLocation != null)
-                {
-                    var segmentDistance =
-                        Location.CalculateDistance(_lastLocation, newLocation, DistanceUnits.Kilometers);
+            var segmentDistance =
+                Location.CalculateDistance(_lastLocation, newLocation, DistanceUnits.Kilometers);
 
-                    _totalDistanceKm += segmentDistance;
-                    DistanceUpdated?.Invoke(this, _totalDistanceKm);
+            _totalDistanceKm += segmentDistance;
+            DistanceUpdated?.Invoke(this, _totalDistanceKm);
 
-                    _lastLocation = newLocation;
-                }
-            
-            await Task.Delay(2000);
+            _lastLocation = newLocation;
         }
     }
     
@@ -69,7 +65,7 @@ public class CalibrationService
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"GPS Pull Failed: {ex.Message}");
+            Debug.WriteLine($"GPS Pull Failed: {ex.Message}");
             return null;
         }
     }

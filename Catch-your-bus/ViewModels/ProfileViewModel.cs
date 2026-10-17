@@ -11,6 +11,11 @@ public partial class ProfileViewModel(
     FavoriteRoutesService favoritesService,
     CalibrationService calibrationService) : ObservableObject
 {
+    public const double MinWalkingSpeedKmH = 2;
+    public const double MaxWalkingSpeedKmH = 10;
+    public const double MinRunningSpeedKmH = 6;
+    public const double MaxRunningSpeedKmH = 25;
+
     private IDispatcherTimer? _stopwatchTimer;
 
     [ObservableProperty] public partial double WalkingSpeed { get; set; } = preferences.WalkingSpeedKmH;
@@ -93,15 +98,16 @@ public partial class ProfileViewModel(
         if (calculatedSpeed.HasValue)
         {
             var roundedSpeed = Math.Round(calculatedSpeed.Value, 1);
-            
+
             if (IsWalkingCalibration)
             {
-                preferences.WalkingSpeedKmH = roundedSpeed;
+                WalkingSpeed = Math.Clamp(roundedSpeed, MinWalkingSpeedKmH, MaxWalkingSpeedKmH);
             }
             else
             {
-                preferences.RunningSpeedKmH = roundedSpeed;
+                RunningSpeed = Math.Clamp(roundedSpeed, MinRunningSpeedKmH, MaxRunningSpeedKmH);
             }
+            SaveSpeeds();
             CalibrationMessage = $"Success! Your average speed is {roundedSpeed} km/h.";
         }
         else

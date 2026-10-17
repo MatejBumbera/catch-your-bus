@@ -23,6 +23,6 @@ public partial class TrackingPage : ContentPage
     {
         base.OnDisappearing();
         
-        _viewModel.IsTracking = false; 
+        _viewModel.StopTracking();
     }
 }

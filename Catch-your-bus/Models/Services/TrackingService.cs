@@ -4,7 +4,7 @@ namespace Catch_your_bus.Models.Services;
 
 public class TrackingService
 {
-    private const double ArrivalThresholdMeters = 15;
+    public const double ArrivalThresholdMeters = 15;
 
     public TrackingPaceResult CalculatePace(
         Location currentLoc,

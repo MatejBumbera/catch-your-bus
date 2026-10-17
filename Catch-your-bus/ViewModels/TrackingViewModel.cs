@@ -17,7 +17,8 @@ public partial class TrackingViewModel(
     private IDispatcherTimer? _countdownTimer;
     private readonly Location? _destinationLocation = trackingState.DestinationLocation;
     private DateTime _startTime;
-    private double _finalDistanceMeters;
+    private Location? _lastLocation;
+    private double _distanceTravelledMeters;
 
     [ObservableProperty] public partial string TargetBusStop { get; set; } = trackingState.TargetBusStop;
     [ObservableProperty] public partial DateTimeOffset DepartureTime { get; set; } = trackingState.DepartureTime;
@@ -75,6 +76,15 @@ public partial class TrackingViewModel(
                 var request = new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(2));
                 var currentLoc = await Geolocation.Default.GetLocationAsync(request);
 
+                if (currentLoc != null)
+                {
+                    if (_lastLocation != null)
+                    {
+                        _distanceTravelledMeters +=
+                            Location.CalculateDistance(_lastLocation, currentLoc, DistanceUnits.Kilometers) * 1000;
+                    }
+                    _lastLocation = currentLoc;
+                }
 
                 if (currentLoc != null && _destinationLocation != null)
                 {
@@ -85,8 +95,6 @@ public partial class TrackingViewModel(
                         preferences.WalkingSpeedKmH,
                         preferences.RunningSpeedKmH
                     );
-
-                    _finalDistanceMeters = result.DistanceMeters;
 
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
@@ -101,7 +109,7 @@ public partial class TrackingViewModel(
                             _ => Colors.Gray
                         };
 
-                        if (result.DistanceMeters <= 15) SpeedText = "You arrived!";
+                        if (result.DistanceMeters <= TrackingService.ArrivalThresholdMeters) SpeedText = "You arrived!";
                     });
                 }
             }
@@ -123,15 +131,19 @@ public partial class TrackingViewModel(
     [RelayCommand]
     private async Task CancelAsync()
     {
+        StopTracking();
+        await Shell.Current.GoToAsync("..");
+    }
+
+    public void StopTracking()
+    {
         IsTracking = false;
         _countdownTimer?.Stop();
-        await Shell.Current.GoToAsync("..");
     }
 
     private async Task FinalizeRunAsync(bool success)
     {
-        IsTracking = false;
-        _countdownTimer?.Stop();
+        StopTracking();
 
         var totalDurationSeconds = (int)(DateTime.Now - _startTime).TotalSeconds;
         if (totalDurationSeconds <= 0)
@@ -139,7 +151,7 @@ public partial class TrackingViewModel(
             totalDurationSeconds = 1;
         } 
 
-        var speedKmH = (_finalDistanceMeters / 1000.0) / (totalDurationSeconds / 3600.0);
+        var speedKmH = (_distanceTravelledMeters / 1000.0) / (totalDurationSeconds / 3600.0);
 
         var metValue = speedKmH switch
         {
@@ -175,7 +187,7 @@ public partial class TrackingViewModel(
             RouteJson = routeJsonString, 
             Success = success,
             DurationSeconds = totalDurationSeconds,
-            DistanceMeters = _finalDistanceMeters,
+            DistanceMeters = Math.Round(_distanceTravelledMeters),
             CaloriesBurned = Math.Round(caloriesBurned, 1),
             TimeSavedSeconds = timeSavedSeconds
         };
