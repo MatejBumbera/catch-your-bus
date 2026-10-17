@@ -20,7 +20,8 @@
                             <Label Grid.Column="1" Text="{Binding WalkingSpeed, StringFormat='{0:F1} km/h'}"
                                    TextColor="#6C63FF" FontAttributes="Bold" VerticalOptions="Center" />
                         </Grid>
-                        <Slider Minimum="2" Maximum="10" Value="{Binding WalkingSpeed}" MinimumTrackColor="#6C63FF"
+                        <Slider Minimum="{x:Static vm:ProfileViewModel.MinWalkingSpeedKmH}"
+                                Maximum="{x:Static vm:ProfileViewModel.MaxWalkingSpeedKmH}" Value="{Binding WalkingSpeed}" MinimumTrackColor="#6C63FF"
                                 DragCompletedCommand="{Binding SaveSpeedsCommand}" />
                     </VerticalStackLayout>
 
@@ -31,7 +32,8 @@
                             <Label Grid.Column="1" Text="{Binding RunningSpeed, StringFormat='{0:F1} km/h'}"
                                    TextColor="#FF8C42" FontAttributes="Bold" VerticalOptions="Center" />
                         </Grid>
-                        <Slider Minimum="6" Maximum="25" Value="{Binding RunningSpeed}" MinimumTrackColor="#FF8C42"
+                        <Slider Minimum="{x:Static vm:ProfileViewModel.MinRunningSpeedKmH}"
+                                Maximum="{x:Static vm:ProfileViewModel.MaxRunningSpeedKmH}" Value="{Binding RunningSpeed}" MinimumTrackColor="#FF8C42"
                                 DragCompletedCommand="{Binding SaveSpeedsCommand}" />
                     </VerticalStackLayout>
                 </VerticalStackLayout>

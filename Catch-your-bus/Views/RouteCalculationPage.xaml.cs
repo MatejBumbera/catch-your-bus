@@ -1,4 +1,3 @@
-using Catch_your_bus.Models.External.GooglePlaces;
 using Catch_your_bus.Models.External.GooglePlaces.Response;
 using Catch_your_bus.ViewModels;
 
@@ -27,31 +26,17 @@ public partial class RouteCalculationPage : ContentPage
         base.OnAppearing();
         await _viewModel.LoadFavoritesCommand.ExecuteAsync(null);
     }
-
+    
     private async void OnStartTextChanged(object? sender, TextChangedEventArgs e)
     {
-        try
-        {
-            if (_suppressTextChanged) return;
-            await _viewModel.SearchStartCommand.ExecuteAsync(e.NewTextValue);
-        }
-        catch (Exception exception)
-        {
-            throw; // TODO handle exception
-        }
+        if (_suppressTextChanged) return;
+        await _viewModel.SearchStartCommand.ExecuteAsync(e.NewTextValue);
     }
 
     private async void OnEndTextChanged(object? sender, TextChangedEventArgs e)
     {
-        try
-        {
-            if (_suppressTextChanged) return;
-            await _viewModel.SearchEndCommand.ExecuteAsync(e.NewTextValue);
-        }
-        catch (Exception exception)
-        {
-            throw; // TODO handle exception
-        }
+        if (_suppressTextChanged) return;
+        await _viewModel.SearchEndCommand.ExecuteAsync(e.NewTextValue);
     }
 
     private async void OnStartPredictionSelected(object? sender, SelectionChangedEventArgs e)

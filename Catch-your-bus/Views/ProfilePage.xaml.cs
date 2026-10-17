@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Catch_your_bus.ViewModels;
 
 namespace Catch_your_bus.Views;
